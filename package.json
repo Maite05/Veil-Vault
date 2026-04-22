@@ -1,0 +1,26 @@
+{
+  "name": "veil-vault",
+  "version": "1.0.0",
+  "description": "**Veiled. Bridgeless. Autonomous.**   A confidential yield strategy vault on Solana that lets users deposit native assets from any chain (no bridges) and run hidden strategies using fully homomorphic encryption.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Maite05/Veil-Vault.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Maite05/Veil-Vault/issues"
+  },
+  "homepage": "https://github.com/Maite05/Veil-Vault#readme",
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
