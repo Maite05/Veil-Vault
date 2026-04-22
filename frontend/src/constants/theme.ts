@@ -1,22 +1,28 @@
-const colors = {
-  surface: "#121318",
-  surfaceContainerLowest: "#0d0e13",
-  surfaceContainerLow: "#1a1b20",
-  surfaceContainer: "#1e1f24",
-  surfaceContainerHigh: "#282a2f",
-  surfaceContainerHighest: "#33353a",
-  primary: "#c6c0ff",
-  primaryContainer: "#6b5ee0",
-  primaryFixed: "#e4dfff",
-  primaryFixedDim: "#c6c0ff",
-  secondary: "#c3c0ff",
-  secondaryContainer: "#434281",
-  tertiary: "#e9b4f7",
-  tertiaryContainer: "#8f609d",
-  onPrimary: "#27049e",
-  onSurface: "#e2e2e9",
-  onSurfaceVariant: "#c8c4d6",
-  outline: "#928f9f",
-  outlineVariant: "#474554",
-  error: "#ffb4ab",
+export const colors = {
+  primary: "#6b5ee0",
+  onPrimary: "#ffffff",
+  surface: "#0a0a0f",
+  onSurface: "#ffffff",
+  onSurfaceVariant: "#a0a0b0",
+  surfaceContainer: "#14141e",
+  surfaceContainerHigh: "#1c1c28",
+  outline: "#2a2a3a",
+  tertiary: "#00d1ff",
+  error: "#ff4d4d",
+  success: "#00ff9d",
 };
+
+export const globalStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+  
+  * { box-sizing: border-box; font-family: 'Space Grotesk', sans-serif; }
+  
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    display: inline-block;
+    vertical-align: middle;
+  }
+`;
