@@ -1,7 +1,7 @@
 import React from "react";
 import { colors, fontFamily } from "../../constants/theme";
 import { MaterialIcon, GradientButton } from "../ui";
-import { useDepositForm } from "../../hooks";
+import { useDepositForm } from "../src/hooks";
 import type { DepositWithdraw } from "../../types";
 
 const QUICK_PERCENTAGES = [

@@ -10,9 +10,9 @@ interface GradientButtonProps{
 }
 
 const SIZE_MAP = {
-    sm: { padding: "6px 14px", fontSize 12 },
-    md: { padding: "11px 0",   fontSize 13 },
-    lg: { padding: "14px 0",   fontSize 15 },
+    sm: { padding: "6px 14px", fontSize: 12 },
+    md: { padding: "11px 0",   fontSize: 13 },
+    lg: { padding: "14px 0",   fontSize: 15 },
 };
 
 

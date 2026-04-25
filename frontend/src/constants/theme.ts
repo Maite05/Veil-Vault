@@ -1,4 +1,4 @@
-
+import { colors, globalStyles } from "./src/constants/theme";
 export const colors = {
   surface:                 "#121318",
   surfaceContainerLowest:  "#0d0e13",

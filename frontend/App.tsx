@@ -1,10 +1,10 @@
 import React from "react";
-import { colors, globalStyles } from "./constants/theme";
-import { Sidebar, Header } from "./components/layout";
-import { MaterialIcon } from "./components/ui";
-import { PortfolioPage, VaultsBrowserPage, VaultDetailPage } from "./pages";
-import { useNavigation } from "./hooks";
-import type { NavItem } from "./types";
+import { colors, globalStyles } from "./src/constants/theme";
+import { Sidebar, Header } from "./src/components/layout";
+import { MaterialIcon } from "./src/components/ui";
+import { PortfolioPage, VaultsBrowserPage, VaultDetailPage } from "./src/pages";
+import { useNavigation } from "./src/hooks";
+import type { NavItem } from "./src/types";
 
 // ─── Placeholder for sections not yet built ───────────────────────────────────
 

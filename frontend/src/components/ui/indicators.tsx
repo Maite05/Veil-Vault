@@ -91,3 +91,5 @@ export const APYBadge: React.FC<APYBadgeProps> = ({ value }) => (
   >
     <div style={{ fontSize: 12, fontWeight: 700, color: colors.primary }}>{value}</div>
   </div>
+  
+  );
