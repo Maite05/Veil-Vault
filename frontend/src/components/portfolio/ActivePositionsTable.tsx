@@ -1,31 +1,37 @@
+import React from "react";
+import { colors, fontFamily } from "../../constants/theme";
 import { MaterialIcon, PrivacyBars, APYBadge } from "../ui";
 import { PORTFOLIO_POSITIONS } from "../../data";
-import { fontFamily } from '..';
 
-const COLUMNS = [ "Vault Name", "Net Value", , "All-Time Yield", "APY", "Privacy Level", ""];
+const COLUMNS = ["Vault Name", "Net Value", "All-Time Yield", "APY", "Privacy Level", ""];
 
-export const ActivePositionTable: React.FC = () => {
-    <div style = {{ background: colors.surfaceContainerLow, borderRadius: 16, padding: 28, marginBottom 20 }}>
-    
-      <div style = {{ display: "flex", justifyContent: "space-between", alignItems "flex-start", marginBottom: 24}}>
-        <div>
-            <h3 style = {{ fontFamily: fontFamily.headline, fontWeight: 700, fontSize: 22, color: "#fff", marginBottom: 6 }}>
-            </h3>
-            <p style = {{color: colors.onSurfaceVariant, fontSize: 13 }}>    
-            </p>
-            </div>
-            <button
-              style={{
-              display: "flex", alignItems: "center", gap: 6,
-              background: "transparent", border: "none",
-              color: colors.primary, fontSize: 13, fontWeight: 600,
-              cursor: "pointer", fontFamily: fontFamily.headline,
-              }}
-            >
-              <MaterialIcon name="arrow_forward" size={16} />
-             </button>
-           </div>
-               <div
+export const ActivePositionsTable: React.FC = () => (
+  <div style={{ background: colors.surfaceContainerLow, borderRadius: 16, padding: 28, marginBottom: 20 }}>
+    {/* Header row */}
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+      <div>
+        <h3 style={{ fontFamily: fontFamily.headline, fontWeight: 700, fontSize: 22, color: "#fff", marginBottom: 6 }}>
+          Active Positions
+        </h3>
+        <p style={{ color: colors.onSurfaceVariant, fontSize: 13 }}>
+          Manage your deployed capital across specialized cryptographic vaults.
+        </p>
+      </div>
+      <button
+        style={{
+          display: "flex", alignItems: "center", gap: 6,
+          background: "transparent", border: "none",
+          color: colors.primary, fontSize: 13, fontWeight: 600,
+          cursor: "pointer", fontFamily: fontFamily.headline,
+        }}
+      >
+        View Strategy Explorer
+        <MaterialIcon name="arrow_forward" size={16} />
+      </button>
+    </div>
+
+    {/* Column labels */}
+    <div
       style={{
         display:             "grid",
         gridTemplateColumns: "2fr 1.5fr 1.5fr 1fr 80px 40px",
@@ -93,9 +99,4 @@ export const ActivePositionTable: React.FC = () => {
       </div>
     ))}
   </div>
-    
-    
-
-
-
-    } 
+);
