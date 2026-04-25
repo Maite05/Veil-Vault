@@ -1,5 +1,29 @@
-import { colors, globalStyles } from "./src/constants/theme";
-export const colors = {
+
+export interface Colors {
+  surface: string;
+  surfaceContainerLowest: string;
+  surfaceContainerLow: string;
+  surfaceContainer: string;
+  surfaceContainerHigh: string;
+  surfaceContainerHighest: string;
+  primary: string;
+  primaryContainer: string;
+  primaryFixed: string;
+  primaryFixedDim: string;
+  secondary: string;
+  secondaryContainer: string;
+  tertiary: string;
+  tertiaryContainer: string;
+  onPrimary: string;
+  onSurface: string;
+  onSurfaceVariant: string;
+  outline: string;
+  outlineVariant: string;
+  error: string;
+}
+
+
+export const colors: Colors = {
   surface:                 "#121318",
   surfaceContainerLowest:  "#0d0e13",
   surfaceContainerLow:     "#1a1b20",
@@ -26,10 +50,10 @@ export const colors = {
   outlineVariant: "#474554",
 
   error: "#ffb4ab",
-} as const;
+}; 
+
 
 export type ColorToken = keyof typeof colors;
-
 
 export const fontFamily = {
   headline: "'Manrope', sans-serif",
@@ -38,19 +62,18 @@ export const fontFamily = {
 } as const;
 
 export const fontSize = {
-  "display-lg": "3.5rem",   // 56px
-  "display-md": "2.75rem",  // 44px
-  "headline-lg": "2rem",    // 32px
-  "headline-md": "1.5rem",  // 24px
-  "body-lg":  "1.0625rem",  // 17px
-  "body-md":  "0.9375rem",  // 15px
-  "body-sm":  "0.8125rem",  // 13px
-  "label-md": "0.75rem",    // 12px
-  "label-sm": "0.6875rem",  // 11px
-  "label-xs": "0.625rem",   // 10px
-  "label-xxs": "0.5625rem", // 9px
+  "display-lg": "3.5rem",
+  "display-md": "2.75rem",
+  "headline-lg": "2rem",
+  "headline-md": "1.5rem",
+  "body-lg":  "1.0625rem",
+  "body-md":  "0.9375rem",
+  "body-sm":  "0.8125rem",
+  "label-md": "0.75rem",
+  "label-sm": "0.6875rem",
+  "label-xs": "0.625rem",
+  "label-xxs": "0.5625rem",
 } as const;
-
 
 export const spacing = {
   1:  4,
@@ -67,7 +90,6 @@ export const spacing = {
   20: 80,
 } as const;
 
-
 export const radius = {
   DEFAULT: 2,
   sm:  4,
@@ -77,7 +99,6 @@ export const radius = {
   "2xl": 16,
   full: 9999,
 } as const;
-
 
 export const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800;900&family=Inter:wght@300;400;600&display=swap');
