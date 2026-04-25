@@ -1,7 +1,7 @@
 import React from "react";
 import { colors, fontFamily } from "../constants/theme";
 import { VaultCard, VaultFilterBar } from "../components/vault";
-import { useVaultFilters } from "../hooks";
+import { useVaultFilters } from "../hooks/useVaultFilters";
 
 export const VaultsBrowserPage: React.FC = () => {
   const {
