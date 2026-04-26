@@ -2,7 +2,8 @@ use anchor_lang::prelude::*;
 use crate::errors::VaultError;
 use crate::state::vault::VaultState;
 
-/// Executes a strategy operation while enforcing on-chain guardrails.
+/// Executes a strategy operation while enforcing on-chain guardrails AND
+/// transferring lamports from the vault PDA to the whitelisted protocol.
 ///
 /// How the FHE + guardrail model works:
 ///   1. Off-chain, the operator evaluates the encrypted strategy params
@@ -13,13 +14,13 @@ use crate::state::vault::VaultState;
 ///      On devnet this is simulated; production would use a ZK-SNARK.
 ///   3. The Solana program verifies the proof and enforces plaintext guardrails:
 ///      time-lock, spending limit, protocol whitelist, max drawdown.
-///   4. If all checks pass the program emits the execution event. The operator
-///      then submits the actual CPI to the target protocol separately.
+///   4. If all checks pass the program transfers `amount_lamports` from the
+///      vault PDA directly to the protocol account (real capital deployment).
+///   5. The protocol later returns principal + yield; the owner calls
+///      `harvest_yield` to record the gain.
 #[derive(Accounts)]
 pub struct ExecuteStrategy<'info> {
     /// The vault owner signs as operator (single-authority for MVP).
-    /// Extendable to a delegated keeper by replacing has_one with a separate
-    /// `operator` allowlist stored in VaultState.
     pub owner: Signer<'info>,
 
     #[account(
@@ -31,64 +32,78 @@ pub struct ExecuteStrategy<'info> {
         constraint = vault.strategy_params_len > 0 @ VaultError::NoStrategyParams,
     )]
     pub vault: Account<'info, VaultState>,
+
+    /// The whitelisted protocol that receives the deployed capital.
+    /// Validated against vault.approved_protocols inside the handler.
+    /// CHECK: key is checked against the on-chain approved_protocols whitelist.
+    #[account(mut)]
+    pub protocol_account: UncheckedAccount<'info>,
 }
 
 pub fn handler(
     ctx: Context<ExecuteStrategy>,
     encrypted_op: Vec<u8>,
     op_proof: [u8; 64],
-    protocol: Pubkey,
     amount_lamports: u64,
 ) -> Result<()> {
-    let vault = &mut ctx.accounts.vault;
+    // Capture keys before the mutable borrow of vault.
+    let protocol = ctx.accounts.protocol_account.key();
+    let vault_key = ctx.accounts.vault.key();
+    let owner_key = ctx.accounts.owner.key();
     let clock = Clock::get()?;
 
-    // ── Guardrail 1: time-lock ────────────────────────────────────────────────
-    if vault.last_executed_at > 0 {
-        let elapsed = clock.unix_timestamp.saturating_sub(vault.last_executed_at);
-        require!(elapsed >= vault.time_lock_secs, VaultError::TimeLockActive);
-    }
+    // ── All guardrail checks + state update (scoped mutable borrow) ──────────
+    {
+        let vault = &mut ctx.accounts.vault;
 
-    // ── Guardrail 2: spending limit ───────────────────────────────────────────
-    require!(
-        amount_lamports <= vault.spending_limit_lamports,
-        VaultError::SpendingLimitExceeded
-    );
+        // ── Guardrail 1: time-lock ────────────────────────────────────────────
+        if vault.last_executed_at > 0 {
+            let elapsed = clock.unix_timestamp.saturating_sub(vault.last_executed_at);
+            require!(elapsed >= vault.time_lock_secs, VaultError::TimeLockActive);
+        }
 
-    // ── Guardrail 3: protocol whitelist ───────────────────────────────────────
-    let approved = (0..vault.approved_protocols_count as usize)
-        .any(|i| vault.approved_protocols[i] == protocol);
-    require!(approved, VaultError::ProtocolNotApproved);
-
-    // ── Guardrail 4: max drawdown ─────────────────────────────────────────────
-    // After the execution the vault's net value would drop by amount_lamports.
-    // Reject if that would breach the drawdown threshold.
-    let total = vault.total_deposited_lamports;
-    if total > 0 {
-        let new_net = vault.net_value_lamports.saturating_sub(amount_lamports);
-        let drawdown_bps = ((total.saturating_sub(new_net)) as u64)
-            .saturating_mul(10_000)
-            / total;
+        // ── Guardrail 2: spending limit ───────────────────────────────────────
         require!(
-            drawdown_bps <= vault.max_drawdown_bps as u64,
-            VaultError::MaxDrawdownExceeded
+            amount_lamports <= vault.spending_limit_lamports,
+            VaultError::SpendingLimitExceeded
         );
-    }
 
-    // ── FHE proof check (devnet simulation) ──────────────────────────────────
-    // Production: verify a ZK proof that encrypted_op is consistent with
-    // vault.strategy_params_hash using the Encrypt-REFHE verifier.
-    // Devnet MVP: verify that op_proof[..32] == SHA-256(encrypted_op || strategy_params_hash).
-    // We use a simple hash commitment here to show the binding structure.
-    verify_op_proof_simulated(&encrypted_op, &vault.strategy_params_hash, &op_proof)?;
+        // ── Guardrail 3: protocol whitelist ───────────────────────────────────
+        let approved = (0..vault.approved_protocols_count as usize)
+            .any(|i| vault.approved_protocols[i] == protocol);
+        require!(approved, VaultError::ProtocolNotApproved);
 
-    // ── Record execution ──────────────────────────────────────────────────────
-    vault.net_value_lamports = vault.net_value_lamports.saturating_sub(amount_lamports);
-    vault.last_executed_at = clock.unix_timestamp;
+        // ── Guardrail 4: max drawdown ─────────────────────────────────────────
+        let total = vault.total_deposited_lamports;
+        if total > 0 {
+            let new_net = vault.net_value_lamports.saturating_sub(amount_lamports);
+            let drawdown_bps = total
+                .saturating_sub(new_net)
+                .saturating_mul(10_000)
+                / total;
+            require!(
+                drawdown_bps <= vault.max_drawdown_bps as u64,
+                VaultError::MaxDrawdownExceeded
+            );
+        }
+
+        // ── Sufficient balance ────────────────────────────────────────────────
+        require!(
+            vault.net_value_lamports >= amount_lamports,
+            VaultError::InsufficientBalance
+        );
+
+        // ── FHE proof check (devnet simulation) ───────────────────────────────
+        verify_op_proof_simulated(&encrypted_op, &vault.strategy_params_hash, &op_proof)?;
+
+        // ── Commit state changes ──────────────────────────────────────────────
+        vault.net_value_lamports = vault.net_value_lamports.saturating_sub(amount_lamports);
+        vault.last_executed_at = clock.unix_timestamp;
+    } // ← mutable borrow of vault dropped here
 
     emit!(StrategyExecuted {
-        vault: vault.key(),
-        operator: ctx.accounts.owner.key(),
+        vault: vault_key,
+        operator: owner_key,
         protocol,
         amount_lamports,
         encrypted_op_len: encrypted_op.len() as u16,
@@ -100,6 +115,16 @@ pub fn handler(
         amount_lamports,
         protocol
     );
+
+    // ── Transfer lamports: vault PDA → protocol account ───────────────────────
+    // Direct lamport manipulation is valid for program-owned PDAs. The mutable
+    // borrow on Account<VaultState> is already released above.
+    let vault_info = ctx.accounts.vault.to_account_info();
+    let protocol_info = ctx.accounts.protocol_account.to_account_info();
+
+    **vault_info.try_borrow_mut_lamports()? -= amount_lamports;
+    **protocol_info.try_borrow_mut_lamports()? += amount_lamports;
+
     Ok(())
 }
 
@@ -107,9 +132,6 @@ pub fn handler(
 ///
 /// Checks that the first 32 bytes of op_proof equal:
 ///   SHA-256(encrypted_op || strategy_params_hash)[..32]
-///
-/// Uses SHA-256 (solana_program::hash) to match the TypeScript client
-/// which computes the same preimage with Node's crypto.createHash("sha256").
 ///
 /// Production: replace with a ZK-SNARK verifier from the Encrypt-REFHE SDK.
 fn verify_op_proof_simulated(
@@ -125,8 +147,6 @@ fn verify_op_proof_simulated(
 
     let digest = hash(&preimage);
 
-    // Hash::as_ref() returns &[u8; 32] — the inner field is private in some
-    // versions of solana_program so we use the public AsRef impl instead.
     require!(
         digest.as_ref() == &op_proof[..32],
         VaultError::InvalidFheProof
