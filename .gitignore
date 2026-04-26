@@ -1,0 +1,52 @@
+# ── Rust / Anchor ─────────────────────────────────────────────────────────────
+target/
+**/*.rs.bk
+.anchor/
+test-ledger/
+
+# Anchor build artifacts
+program/target/
+
+# IDL generated files (commit only if intentional)
+# target/idl/
+# target/types/
+
+# ── Node / npm ────────────────────────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+dist/
+.next/
+out/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Environment & secrets ──────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+
+# Solana keypairs — NEVER commit private keys
+**/id.json
+wallet.json
+deploy-keypair.json
+program-keypair.json
+
+# ── Editor / OS ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# ── TypeScript ────────────────────────────────────────────────────────────────
+*.js.map
+*.d.ts.map
+tsconfig.tsbuildinfo
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+.cache/
+coverage/

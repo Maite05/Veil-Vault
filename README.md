@@ -45,16 +45,66 @@ Removing either breaks the core experience of **bridgeless + confidential** stra
 
 ## Quick Start (Devnet)
 
+### Prerequisites
+
 ```bash
-git clone https://github.com/Maite05/veilvault.git
-cd veilvault
+# 1. Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
 
-# Build & deploy program
-cd program
+# 2. Solana CLI (v1.18+)
+sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
+# 3. Anchor CLI (v0.29.0)
+cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+avm install 0.29.0 && avm use 0.29.0
+
+# 4. Node deps
+npm install
+```
+
+### Build & deploy the Anchor program
+
+```bash
+# Configure devnet wallet
+solana config set --url devnet
+solana-keygen new --outfile ~/.config/solana/id.json   # skip if you have one
+solana airdrop 2
+
+# Compile Rust → BPF and generate IDL
 anchor build
-anchor deploy --provider.cluster devnet
 
-# Run frontend
-cd ../frontend
+# Sync program ID across all source files
+anchor keys sync
+
+# Deploy
+bash scripts/deploy-devnet.sh
+```
+
+After deployment update the Program ID in:
+- `program/src/lib.rs` → `declare_id!("...")`
+- `Anchor.toml` → `veil_vault = "..."`
+- `frontend/lib/solana.ts` → `PROGRAM_ID = new PublicKey("...")`
+
+### Run tests (localnet)
+
+```bash
+# Terminal 1 – local validator
+solana-test-validator --reset
+
+# Terminal 2 – test suite
+anchor test --skip-local-validator
+# or: npm test
+```
+
+### Run the frontend
+
+```bash
+cd frontend
 npm install
 npm run dev
+# open http://localhost:3000
+```
+
+**Program ID (Devnet):** `5Jn23ZQaF8LVbm5WQASc7QWcAhq9QPLJQGFxmC2gUwgB`

@@ -1,0 +1,25 @@
+[toolchain]
+anchor_version = "0.29.0"
+
+[features]
+seeds = true
+skip-lint = false
+
+[programs.localnet]
+veil_vault = "5Jn23ZQaF8LVbm5WQASc7QWcAhq9QPLJQGFxmC2gUwgB"
+
+[programs.devnet]
+veil_vault = "5Jn23ZQaF8LVbm5WQASc7QWcAhq9QPLJQGFxmC2gUwgB"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[workspace]
+members = ["program"]
+
+[scripts]
+test = "npx ts-mocha -p ./tests/tsconfig.json -t 1000000 tests/**/*.ts"
