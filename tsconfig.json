@@ -18,7 +18,9 @@
   },
   "include": [
     "frontend/src",
-    "frontend/App.tsx"
+    "frontend/App.tsx",
+    "frontend/main.tsx",
+    "vite.config.ts"
   ],
   "exclude": [
     "node_modules",

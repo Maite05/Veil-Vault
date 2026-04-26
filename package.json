@@ -14,7 +14,15 @@
     "type": "git",
     "url": "git+https://github.com/Maite05/Veil-Vault.git"
   },
-  "keywords": ["solana", "web3", "fhe", "defi", "anchor", "ika", "encrypt"],
+  "keywords": [
+    "solana",
+    "web3",
+    "fhe",
+    "defi",
+    "anchor",
+    "ika",
+    "encrypt"
+  ],
   "author": "Maite",
   "license": "ISC",
   "bugs": {
@@ -23,11 +31,16 @@
   "homepage": "https://github.com/Maite05/Veil-Vault#readme",
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
+    "@solana/wallet-adapter-base": "^0.9.27",
+    "@solana/wallet-adapter-react": "^0.15.39",
+    "@solana/wallet-adapter-react-ui": "^0.9.39",
+    "@solana/wallet-adapter-wallets": "^0.19.38",
     "@solana/web3.js": "^1.95.5",
+    "buffer": "^6.0.3",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.473.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "lucide-react": "^0.473.0",
-    "clsx": "^2.1.1",
     "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
