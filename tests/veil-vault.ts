@@ -24,6 +24,7 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
+  Transaction,
 } from "@solana/web3.js";
 import { createHash } from "crypto";
 import { assert } from "chai";
@@ -505,19 +506,28 @@ describe("VeilVault", () => {
     const EXEC_AMOUNT = new BN(LAMPORTS_PER_SOL / 10); // 0.1 SOL – within limits
 
     it("executes strategy when all guardrails pass (happy path)", async () => {
+      const protocolBalanceBefore = await provider.connection.getBalance(mockProtocol);
+
       await program.methods
         .executeStrategy(
           Array.from(encryptedOp),
           opProof,
-          mockProtocol,
           EXEC_AMOUNT
         )
-        .accounts({ owner, vault })
+        .accounts({ owner, vault, protocolAccount: mockProtocol })
         .rpc();
 
       const state = await program.account.vaultState.fetch(vault);
       // net_value_lamports decreased by EXEC_AMOUNT
       assert.isTrue(state.netValueLamports.lt(state.totalDepositedLamports));
+
+      // Verify real lamport transfer: protocol received the SOL
+      const protocolBalanceAfter = await provider.connection.getBalance(mockProtocol);
+      assert.equal(
+        protocolBalanceAfter - protocolBalanceBefore,
+        EXEC_AMOUNT.toNumber(),
+        "protocol account should have received EXEC_AMOUNT lamports"
+      );
     });
 
     it("rejects execution with an invalid FHE op proof", async () => {
@@ -527,10 +537,9 @@ describe("VeilVault", () => {
             .executeStrategy(
               Array.from(encryptedOp),
               BAD_PROOF,
-              mockProtocol,
               EXEC_AMOUNT
             )
-            .accounts({ owner, vault })
+            .accounts({ owner, vault, protocolAccount: mockProtocol })
             .rpc(),
         "InvalidFheProof"
       );
@@ -545,10 +554,9 @@ describe("VeilVault", () => {
             .executeStrategy(
               Array.from(encryptedOp),
               opProof,
-              unapproved,
               EXEC_AMOUNT
             )
-            .accounts({ owner, vault })
+            .accounts({ owner, vault, protocolAccount: unapproved })
             .rpc(),
         "ProtocolNotApproved"
       );
@@ -567,10 +575,9 @@ describe("VeilVault", () => {
             .executeStrategy(
               Array.from(encryptedOp),
               bigOpProof,
-              mockProtocol,
               overLimit
             )
-            .accounts({ owner, vault })
+            .accounts({ owner, vault, protocolAccount: mockProtocol })
             .rpc(),
         "SpendingLimitExceeded"
       );
@@ -659,10 +666,9 @@ describe("VeilVault", () => {
             .executeStrategy(
               Array.from(encryptedOp),
               drawdownProof,
-              mockProtocol,
               drawdownAmount
             )
-            .accounts({ owner: smallOwner.publicKey, vault: smallVault })
+            .accounts({ owner: smallOwner.publicKey, vault: smallVault, protocolAccount: mockProtocol })
             .signers([smallOwner])
             .rpc(),
         "MaxDrawdownExceeded"
@@ -721,8 +727,8 @@ describe("VeilVault", () => {
 
       // First execution – always succeeds (last_executed_at was 0)
       await program.methods
-        .executeStrategy(Array.from(encryptedOp), tlProof, mockProtocol, execAmount)
-        .accounts({ owner: tlOwner.publicKey, vault: tlVault })
+        .executeStrategy(Array.from(encryptedOp), tlProof, execAmount)
+        .accounts({ owner: tlOwner.publicKey, vault: tlVault, protocolAccount: mockProtocol })
         .signers([tlOwner])
         .rpc();
 
@@ -730,8 +736,8 @@ describe("VeilVault", () => {
       await expectErr(
         () =>
           program.methods
-            .executeStrategy(Array.from(encryptedOp), tlProof, mockProtocol, execAmount)
-            .accounts({ owner: tlOwner.publicKey, vault: tlVault })
+            .executeStrategy(Array.from(encryptedOp), tlProof, execAmount)
+            .accounts({ owner: tlOwner.publicKey, vault: tlVault, protocolAccount: mockProtocol })
             .signers([tlOwner])
             .rpc(),
         "TimeLockActive"
@@ -758,8 +764,8 @@ describe("VeilVault", () => {
       await expectErr(
         () =>
           program.methods
-            .executeStrategy(Array.from(encryptedOp), opProof, mockProtocol, EXEC_AMOUNT)
-            .accounts({ owner: freshOwner.publicKey, vault: freshVault })
+            .executeStrategy(Array.from(encryptedOp), opProof, EXEC_AMOUNT)
+            .accounts({ owner: freshOwner.publicKey, vault: freshVault, protocolAccount: mockProtocol })
             .signers([freshOwner])
             .rpc(),
         "NoStrategyParams"
@@ -817,10 +823,92 @@ describe("VeilVault", () => {
   });
 
   // ════════════════════════════════════════════════════════════════════════════
-  // 8. Withdrawals
+  // 8. Yield Harvesting
   // ════════════════════════════════════════════════════════════════════════════
 
-  describe("8. Withdrawals", () => {
+  describe("8. Yield Harvesting", () => {
+    // After the happy-path execute_strategy in section 6, the vault deployed
+    // EXEC_AMOUNT (0.1 SOL) to mockProtocol. Here we simulate the protocol
+    // returning principal + 10 % yield, then verify harvest_yield updates the
+    // vault state correctly.
+
+    it("harvests yield after protocol returns principal + yield", async () => {
+      const stateBefore = await program.account.vaultState.fetch(vault);
+      const netBefore: BN = stateBefore.netValueLamports;
+
+      // Simulate protocol returning 0.1 SOL principal + 0.01 SOL yield = 0.11 SOL.
+      // In production, the protocol sends this directly to the vault PDA; in tests
+      // we do it from the provider wallet.
+      const yieldAmount = new BN(LAMPORTS_PER_SOL / 100); // 0.01 SOL
+      const execAmount = new BN(LAMPORTS_PER_SOL / 10);   // original 0.1 SOL deployed
+      const returned = execAmount.add(yieldAmount);        // 0.11 SOL returned
+
+      // Transfer lamports from the test wallet → vault PDA (simulates protocol return).
+      const transferIx = SystemProgram.transfer({
+        fromPubkey: owner,
+        toPubkey: vault,
+        lamports: returned.toNumber(),
+      });
+      const tx = new Transaction().add(transferIx);
+      await provider.sendAndConfirm(tx);
+
+      // Call harvest_yield; program verifies lamports are actually present.
+      await program.methods
+        .harvestYield(returned)
+        .accounts({ owner, vault })
+        .rpc();
+
+      const stateAfter = await program.account.vaultState.fetch(vault);
+
+      // net_value_lamports rose by the full returned amount
+      assert.isTrue(
+        stateAfter.netValueLamports.eq(netBefore.add(returned)),
+        "net value should increase by returned amount"
+      );
+
+      // total_yield_earned_lamports = net_value - total_deposited (when positive)
+      const impliedYield = stateAfter.netValueLamports.sub(stateAfter.totalDepositedLamports);
+      if (impliedYield.gtn(0)) {
+        assert.isTrue(
+          stateAfter.totalYieldEarnedLamports.eq(impliedYield),
+          "total yield earned should equal net value surplus over deposits"
+        );
+      }
+    });
+
+    it("rejects harvest_yield when claimed amount exceeds vault balance", async () => {
+      // Attempt to claim 1000 SOL when the vault holds far less.
+      await expectErr(
+        () =>
+          program.methods
+            .harvestYield(new BN(1000 * LAMPORTS_PER_SOL))
+            .accounts({ owner, vault })
+            .rpc(),
+        "InsufficientBalance"
+      );
+    });
+
+    it("rejects harvest_yield from non-owner", async () => {
+      const attacker = Keypair.generate();
+      await airdrop(provider.connection, attacker.publicKey, 1);
+
+      await expectErr(
+        () =>
+          program.methods
+            .harvestYield(new BN(1000))
+            .accounts({ owner: attacker.publicKey, vault })
+            .signers([attacker])
+            .rpc(),
+        "Unauthorized"
+      );
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // 9. Withdrawals
+  // ════════════════════════════════════════════════════════════════════════════
+
+  describe("9. Withdrawals", () => {
     it("owner withdraws within the net value limit", async () => {
       const stateBefore = await program.account.vaultState.fetch(vault);
       const netBefore: BN = stateBefore.netValueLamports;
@@ -872,7 +960,7 @@ describe("VeilVault", () => {
   // 9. Cross-cutting: unauthorized access
   // ════════════════════════════════════════════════════════════════════════════
 
-  describe("9. Unauthorized Access", () => {
+  describe("10. Unauthorized Access", () => {
     let attacker: Keypair;
 
     before(async () => {
@@ -916,7 +1004,7 @@ describe("VeilVault", () => {
   // 10. Pause / unpause
   // ════════════════════════════════════════════════════════════════════════════
 
-  describe("10. Pause / Unpause (emergency stop)", () => {
+  describe("11. Pause / Unpause (emergency stop)", () => {
     it("owner pauses the vault", async () => {
       await program.methods
         .setPaused(true)
