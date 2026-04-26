@@ -58,6 +58,10 @@ pub struct VaultState {
 
     pub is_paused: bool,
     pub created_at: i64,
+
+    /// Cumulative yield earned: net_value_lamports - total_deposited_lamports
+    /// when positive. Updated by harvest_yield. Zero if vault is at a loss.
+    pub total_yield_earned_lamports: u64,
 }
 
 impl VaultState {
@@ -73,6 +77,7 @@ impl VaultState {
         + (32 * MAX_APPROVED_PROTOCOLS) + 1  // approved_protocols, count
         + MAX_ENCRYPTED_PERF + 2  // perf_summary_ct, len
         + 1 + 8             // is_paused, created_at
+        + 8                 // total_yield_earned_lamports
     }
 }
 
