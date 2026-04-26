@@ -59,8 +59,6 @@ export interface FheOperation {
   opProof: Uint8Array; // 64 bytes
 }
 
-// ─── Key generation ───────────────────────────────────────────────────────────
-
 /**
  * Generate a new FHE key pair for a vault owner.
  *
@@ -76,7 +74,6 @@ export function generateFheKeyPair(): FheKeyPair {
   return { publicKey, privateKey };
 }
 
-// ─── Encryption ───────────────────────────────────────────────────────────────
 
 /**
  * Encrypt strategy parameters under the vault's FHE public key.
@@ -102,8 +99,6 @@ export function encryptPerformanceSummary(
   return _encrypt(plaintext, keyPair);
 }
 
-// ─── Decryption (owner-only) ──────────────────────────────────────────────────
-
 /**
  * Decrypt strategy params stored on-chain.  Only the holder of the private key
  * can call this — mirrors the owner-only confidentiality guarantee.
@@ -126,8 +121,6 @@ export function decryptPerformanceSummary(
   const plain = _decrypt(ciphertext, keyPair);
   return JSON.parse(plain.toString("utf8"));
 }
-
-// ─── Homomorphic operation builder ───────────────────────────────────────────
 
 /**
  * Build an FheOperation for execute_strategy.
@@ -160,8 +153,6 @@ export function buildStrategyOperation(
 
   return { encryptedOp, opProof };
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const MAGIC = Buffer.from("RFHE");
 

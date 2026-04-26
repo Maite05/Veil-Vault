@@ -26,7 +26,6 @@
 import { randomBytes, createHash } from "crypto";
 import { PublicKey } from "@solana/web3.js";
 
-// ─── Supported chains ─────────────────────────────────────────────────────────
 
 export const CHAIN_SOLANA = 0;
 export const CHAIN_BITCOIN = 1;
@@ -37,8 +36,6 @@ export const CHAIN_RWA = 3;
 export function chainBitmap(...chains: number[]): number {
   return chains.reduce((acc, c) => acc | (1 << c), 0);
 }
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface DWalletConfig {
   /** Which chains this dWallet will custody */
@@ -87,7 +84,6 @@ export interface DWalletSignRequest {
   programApprovalSignature: Uint8Array;
 }
 
-// ─── dWallet creation (2PC-MPC ceremony) ──────────────────────────────────────
 
 /**
  * Create a new Ika dWallet.
@@ -142,8 +138,6 @@ export async function createDWallet(
   return { dwalletId, dwalletPubkey, chainAddresses, chainBitmap: bitmap };
 }
 
-// ─── Bridgeless deposit intent ────────────────────────────────────────────────
-
 /**
  * Simulate a bridgeless deposit arriving via an Ika dWallet.
  *
@@ -186,8 +180,6 @@ export async function simulateBridgelessDeposit(
   return { dwalletTxId, sourceChain, nativeAmount, equivalentLamports, proofBytes };
 }
 
-// ─── Signing ceremony (program-approved) ─────────────────────────────────────
-
 /**
  * Request a co-signature from Ika for a cross-chain transaction.
  *
@@ -213,8 +205,6 @@ export async function requestDWalletSignature(
   console.log("[Ika] Signing ceremony complete (devnet sim). Chain:", request.chain);
   return { signature: sig, chain: request.chain };
 }
-
-// ─── Utility ──────────────────────────────────────────────────────────────────
 
 /**
  * Verify that a bridgeless deposit proof is valid.
