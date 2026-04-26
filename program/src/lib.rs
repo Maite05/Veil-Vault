@@ -90,21 +90,34 @@ pub mod veil_vault {
     ///
     /// The operator computes the encrypted operation off-chain (homomorphic
     /// evaluation of the strategy on ciphertext params) and submits:
-    ///   • `encrypted_op` — the FHE ciphertext describing the operation
-    ///   • `op_proof`     — a commitment binding the op to `strategy_params_hash`
-    ///   • `protocol`     — target protocol (must be whitelisted)
+    ///   • `encrypted_op`    — the FHE ciphertext describing the operation
+    ///   • `op_proof`        — a commitment binding the op to `strategy_params_hash`
     ///   • `amount_lamports` — plaintext amount (the guardrail-visible value)
     ///
+    /// The target protocol is passed as the `protocol_account` account (must be
+    /// whitelisted). On success, `amount_lamports` are transferred from the
+    /// vault PDA to the protocol account (real on-chain capital deployment).
+    ///
     /// Guardrails checked: time-lock, spending limit, protocol whitelist,
-    /// max drawdown. All pass → execution event emitted.
+    /// max drawdown. The operator calls `harvest_yield` once the protocol
+    /// returns principal + yield to the vault.
     pub fn execute_strategy(
         ctx: Context<ExecuteStrategy>,
         encrypted_op: Vec<u8>,
         op_proof: [u8; 64],
-        protocol: Pubkey,
         amount_lamports: u64,
     ) -> Result<()> {
-        execute_strategy::handler(ctx, encrypted_op, op_proof, protocol, amount_lamports)
+        execute_strategy::handler(ctx, encrypted_op, op_proof, amount_lamports)
+    }
+
+    /// Record yield returned from a whitelisted protocol.
+    ///
+    /// After the protocol transfers (principal + yield) back to the vault PDA,
+    /// the owner calls this instruction with the total returned amount.
+    /// The program verifies the lamports are actually present in the vault,
+    /// then updates `net_value_lamports` and `total_yield_earned_lamports`.
+    pub fn harvest_yield(ctx: Context<HarvestYield>, returned_lamports: u64) -> Result<()> {
+        harvest_yield::handler(ctx, returned_lamports)
     }
 
     /// Add a protocol to the vault's approved execution whitelist.
