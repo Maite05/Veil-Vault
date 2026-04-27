@@ -70,6 +70,8 @@ export interface UseVaultReturn {
   loading:          boolean;
   error:            string | null;
   txSig:            string | null;
+  /** During setupVault: describes the current step (e.g. "2/5 Creating dWallet…"). */
+  setupStep:        string | null;
   setupVault:       () => Promise<void>;
   depositSol:       (sol: number) => Promise<void>;
   withdrawSol:      (sol: number) => Promise<void>;
@@ -89,9 +91,10 @@ export function useVault(): UseVaultReturn {
   const [dwalletApproved,  setDwalletApproved] = useState(false);
   const [vault,            setVault]           = useState<OnChainVaultState | null>(null);
   const [walletBalanceSol, setWalletBalance]   = useState(0);
-  const [loading,  setLoading] = useState(false);
-  const [error,    setError]   = useState<string | null>(null);
-  const [txSig,    setTxSig]   = useState<string | null>(null);
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState<string | null>(null);
+  const [txSig,     setTxSig]     = useState<string | null>(null);
+  const [setupStep, setSetupStep] = useState<string | null>(null);
 
   // ── Read on-chain state ──────────────────────────────────────────────────────
 
