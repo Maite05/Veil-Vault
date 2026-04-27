@@ -5,9 +5,10 @@ import { MaterialIcon } from "../ui";
 // ─── Investment Strategy Card ─────────────────────────────────────────────────
 
 const STRATEGY_ROWS = [
-  { label: "Risk Profile",          value: "Low-Medium"      },
-  { label: "Rebalance Frequency",   value: "Every 12 Hours"  },
-  { label: "Asset Exposure",        value: "ETH, USDC"       },
+  { label: "Risk Profile",       value: "Configurable"          },
+  { label: "Rebalance Trigger",  value: "FHE-encrypted rule"    },
+  { label: "Asset Exposure",     value: "SOL + multi-chain Ika" },
+  { label: "Max Drawdown",       value: "20% (on-chain guard)"  },
 ];
 
 export const InvestmentStrategy: React.FC = () => (
@@ -22,8 +23,9 @@ export const InvestmentStrategy: React.FC = () => (
     </div>
 
     <p style={{ color: colors.onSurfaceVariant, fontSize: 12, lineHeight: 1.7, marginBottom: 16 }}>
-      This vault utilizes a Fully Homomorphic Encryption (FHE) layer to execute trades on
-      decentralized exchanges without revealing execution logic to front-running bots.
+      Strategy parameters are stored as an Encrypt REFHE ciphertext on-chain. Rebalancing
+      decisions are evaluated homomorphically — execution logic stays hidden from searchers
+      and front-running bots throughout the entire lifecycle.
     </p>
 
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -48,8 +50,8 @@ interface SecurityBadgeItem {
 }
 
 const BADGE_ITEMS: SecurityBadgeItem[] = [
-  { icon: "lock",  title: "FHE Processing", subtitle: "Active & Verified",  badge: "LIVE",   badgeColor: "#4ade80"       },
-  { icon: "group", title: "MPC Custody",    subtitle: "2-of-3 Threshold",   badge: "SECURE", badgeColor: colors.primary  },
+  { icon: "lock",  title: "Encrypt REFHE",  subtitle: "FHE · Devnet sim",   badge: "FHE",   badgeColor: "#a78bfa" },
+  { icon: "group", title: "Ika dWallet",    subtitle: "2PC-MPC · Devnet",   badge: "MPC",   badgeColor: colors.primary  },
 ];
 
 export const SecurityBadges: React.FC = () => (
