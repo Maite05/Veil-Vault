@@ -1,0 +1,10 @@
+node_modules
+program
+target
+tests
+scripts
+migrations
+docs
+*.toml
+*.lock
+Cargo.toml
