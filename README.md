@@ -46,6 +46,45 @@ VeilVault is built **around** these two primitives — they are fundamental to t
 
 Removing either breaks the core experience of **bridgeless + confidential** strategy execution.
 
+```mermaid
+flowchart TD
+    subgraph User ["User Layer"]
+        A["Connect Wallet + Approve Actions"]
+    end
+
+    subgraph Ika ["Ika Network (2PC-MPC)"]
+        B["dWallet Creation\nProgrammable Multi-Chain Signing"]
+        C["Native Asset Control\n(BTC / ETH / RWAs)"]
+    end
+
+    subgraph Solana ["Solana - Control & Settlement Layer"]
+        D["VeilVault Anchor Program\n- Guardrails Enforcement\n- Policy Engine"]
+        E["Encrypted Vault State\n- Strategy Parameters\n- Position Sizes\n- Risk Rules"]
+        F["FHE Computation Layer\n(Encrypt REFHE)\n- Homomorphic Rebalancing\n- Risk Checks\n- Yield Calculations"]
+    end
+
+    subgraph Execution ["Execution Layer"]
+        G["Solana DeFi Protocols\n(Kamino, Jupiter, etc.)"]
+    end
+
+    subgraph Owner ["Owner Only"]
+        H["Threshold Decryption\nDecrypted Performance Summary"]
+    end
+
+    A -->|Authorization| B
+    B <-->|Joint Signing| D
+    C -->|Bridgeless Deposit| B
+    D -->|Enforce Policies| E
+    E <-->|Store & Compute Encrypted| F
+    F -->|Encrypted Result| D
+    D -->|Guarded Tx| G
+    G -->|Returns| D
+    D -->|Owner Decrypts| H
+
+    style E fill:#1a1a2e,stroke:#00ff9d,stroke-width:2px
+    style F fill:#16213e,stroke:#00ff9d,stroke-width:2px
+```
+
 ## Key Features (MVP – Demoable on Devnet)
 
 **On-chain program (10 instructions):**
