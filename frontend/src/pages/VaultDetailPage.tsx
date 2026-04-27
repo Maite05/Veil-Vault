@@ -7,52 +7,68 @@ import {
   SecurityBadges,
   DepositPanel,
   RecentActivityPanel,
+  PerformancePanel,
 } from "../components/detail";
+import { useVault } from "../hooks";
 
-export const VaultDetailPage: React.FC = () => (
-  <section style={{ padding: "32px", maxWidth: 1200, margin: "0 auto" }}>
+export const VaultDetailPage: React.FC = () => {
+  const { vault, vaultExists } = useVault();
 
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
+  // Show real on-chain TVL when available; fall back to placeholder.
+  const tvlDisplay = vaultExists && vault
+    ? `${vault.netValueSol.toFixed(4)} SOL`
+    : "—";
 
-      {/* ── Left column ── */}
-      <div>
-        <VaultDetailHeader
-          breadcrumb="Arbitrum Alpha-Delta Neutral"
-          title="Alpha-Delta Neutral"
-          description="Hedged yield farming across GMX and Uniswap V3 liquidity pools."
-          netApy="24.82%"
-          tvl="$4.2M"
-        />
+  const yieldDisplay = vaultExists && vault && vault.yieldEarnedSol > 0
+    ? `+${(vault.yieldEarnedSol / Math.max(vault.totalDepositedSol, 0.0001) * 100).toFixed(2)}%`
+    : "—";
 
-        <VaultAPYChart />
+  return (
+    <section style={{ padding: "32px", maxWidth: 1200, margin: "0 auto" }}>
 
-        {/* Investment strategy + security badges side by side */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-          <InvestmentStrategy />
-          <SecurityBadges />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
+
+        {/* ── Left column ── */}
+        <div>
+          <VaultDetailHeader
+            breadcrumb="VeilVault — Encrypted Yield"
+            title="Encrypted Yield Vault"
+            description="Deposit native SOL (or bridgeless BTC/ETH via Ika dWallet). Strategy params are FHE-encrypted; guardrails enforced on-chain."
+            netApy={yieldDisplay}
+            tvl={tvlDisplay}
+          />
+
+          <VaultAPYChart />
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <InvestmentStrategy />
+            <SecurityBadges />
+          </div>
+        </div>
+
+        {/* ── Right column ── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <DepositPanel />
+          <PerformancePanel />
+          <RecentActivityPanel />
         </div>
       </div>
 
-      {/* ── Right column ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <DepositPanel />
-        <RecentActivityPanel />
+      {/* Footer */}
+      <div
+        style={{
+          marginTop:     40,
+          textAlign:     "center",
+          color:         "#334155",
+          fontSize:      10,
+          fontWeight:    600,
+          letterSpacing: "0.15em",
+          textTransform: "uppercase",
+        }}
+      >
+        Veil Vault • FHE by Encrypt · Custody by Ika · Program:{" "}
+        G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS
       </div>
-    </div>
-
-    {/* Footer */}
-    <div
-      style={{
-        marginTop:     40,
-        textAlign:     "center",
-        color:         "#334155",
-        fontSize:      10,
-        fontWeight:    600,
-        letterSpacing: "0.15em",
-        textTransform: "uppercase",
-      }}
-    >
-      Veil Vault V2.4.0-Stable • Powered by ZK-Proofs &amp; MPC • Audit Hash: 0xa7...f2e
-    </div>
-  </section>
-);
+    </section>
+  );
+};
