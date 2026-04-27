@@ -19,7 +19,7 @@ import { sha256 } from "@noble/hashes/sha256";
 
 /** Replace after `anchor deploy --provider.cluster devnet` */
 export const PROGRAM_ID = new PublicKey(
-  "5Jn23ZQaF8LVbm5WQASc7QWcAhq9QPLJQGFxmC2gUwgB"
+  "G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS"
 );
 
 // ─── PDA helpers ──────────────────────────────────────────────────────────────
@@ -305,6 +305,48 @@ export class VeilVaultClient {
     });
 
     return this._send([ix]);
+  }
+
+  // returnAndHarvestYield ─────────────────────────────────────────────────────
+  // Batches two instructions in one transaction:
+  //   1. System transfer: owner → vault  (the "protocol" sends funds back)
+  //   2. harvest_yield                   (program records the returned amount)
+  // Both instructions execute atomically, so the lamport balance check in
+  // harvest_yield sees the new funds immediately.
+
+  async returnAndHarvestYield(returnedLamports: bigint): Promise<string> {
+    const owner = this.wallet.publicKey;
+    const [vault] = findVaultPda(owner);
+
+    const transferIx = new TransactionInstruction({
+      programId: SystemProgram.programId,
+      keys: [
+        { pubkey: owner, isSigner: true,  isWritable: true  },
+        { pubkey: vault, isSigner: false, isWritable: true  },
+      ],
+      data: (() => {
+        // System program Transfer instruction layout: [u32 instruction_index=2, u64 lamports]
+        const b = Buffer.alloc(12);
+        b.writeUInt32LE(2, 0);
+        b.writeBigUInt64LE(returnedLamports, 4);
+        return b;
+      })(),
+    });
+
+    const harvestData = Buffer.concat([
+      discriminator("harvest_yield"),
+      encodeU64LE(returnedLamports),
+    ]);
+    const harvestIx = new TransactionInstruction({
+      programId: PROGRAM_ID,
+      keys: [
+        { pubkey: owner, isSigner: true,  isWritable: false },
+        { pubkey: vault, isSigner: false, isWritable: true  },
+      ],
+      data: harvestData,
+    });
+
+    return this._send([transferIx, harvestIx]);
   }
 
   // add_approved_protocol ─────────────────────────────────────────────────────
