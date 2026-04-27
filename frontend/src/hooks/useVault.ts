@@ -154,12 +154,13 @@ export function useVault(): UseVaultReturn {
   // ── Actions ──────────────────────────────────────────────────────────────────
 
   const setupVault = useCallback(async () => {
-    setLoading(true); setError(null); setTxSig(null);
+    setLoading(true); setError(null); setTxSig(null); setSetupStep(null);
     try {
       const client = getClient();
       const owner  = wallet.publicKey!;
 
       // 1. Initialise vault (FHE pubkey = random 32 bytes for devnet)
+      setSetupStep("1/5  Initialising vault…");
       await client.initializeVault({
         fhePubkey:             crypto.getRandomValues(new Uint8Array(32)),
         maxDrawdownBps:        2000,
@@ -169,6 +170,7 @@ export function useVault(): UseVaultReturn {
 
       // 2. Register a simulated Ika 2PC-MPC dWallet binding (devnet stub).
       //    Production: real dWallet ID from the Ika SDK ceremony on Sui devnet.
+      setSetupStep("2/5  Registering Ika dWallet…");
       const dwalletPubkey = new Uint8Array(33);
       dwalletPubkey[0]    = 0x02; // compressed secp256k1 point prefix
       await client.createDWallet({
@@ -178,14 +180,17 @@ export function useVault(): UseVaultReturn {
       });
 
       // 3. Approve dWallet (ratifies the 2PC-MPC ceremony on-chain)
+      setSetupStep("3/5  Approving dWallet…");
       await client.approveDWallet();
 
       // 4. Whitelist the owner's wallet as the mock yield protocol for devnet.
       //    Production: whitelist real Kamino / Jupiter / Drift program IDs.
+      setSetupStep("4/5  Adding yield protocol…");
       await client.addApprovedProtocol(owner);
 
       // 5. Set simulated FHE-encrypted strategy params.
       //    Production: real REFHE ciphertext from Encrypt SDK.
+      setSetupStep("5/5  Encrypting strategy params…");
       const encryptedParams = new TextEncoder().encode(
         "RFHE" + JSON.stringify({
           allocationBps:       [{ asset: "SOL", bps: 6000 }, { asset: "USDC", bps: 4000 }],
@@ -199,9 +204,11 @@ export function useVault(): UseVaultReturn {
         encryptedParams,
         paramsHash: new Uint8Array(paramsHash),
       });
+      setSetupStep(null);
       setTxSig(sig);
       await readVault();
     } catch (e) {
+      setSetupStep(null);
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
@@ -319,6 +326,7 @@ export function useVault(): UseVaultReturn {
     loading,
     error,
     txSig,
+    setupStep,
     setupVault,
     depositSol,
     withdrawSol,
