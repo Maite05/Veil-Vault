@@ -4,7 +4,7 @@
 A confidential yield strategy vault on Solana that lets users deposit native assets from any chain (no bridges) and run hidden strategies using fully homomorphic encryption.
 
 **Submitted to:** Colosseum Frontier Hackathon 2026 – Encrypt & Ika Track + Main Competition  
-**Live Demo (Devnet):** _deploy link — see frontend section below_  
+**Live Demo (Devnet):** https://veil-vault-pi.vercel.app  
 **Demo Video:** _[add Loom / YouTube link – under 5 min]_  
 **Program ID (Devnet):** `G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS`
 
