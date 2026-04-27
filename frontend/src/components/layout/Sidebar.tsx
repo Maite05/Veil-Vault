@@ -1,6 +1,7 @@
 import React from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { colors, fontFamily } from "../../constants/theme";
-import { MaterialIcon, GradientText, GradientButton } from "../ui";
+import { MaterialIcon, GradientText } from "../ui";
 import type { SidebarProps, NavItem } from "../../types";
 
 interface NavLink {
@@ -21,7 +22,13 @@ const UTILITY_LINKS = [
   { icon: "description", label: "Documentation" },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => (
+export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => {
+  const { connected, publicKey } = useWallet();
+  const shortKey = publicKey
+    ? `${publicKey.toBase58().slice(0, 4)}…${publicKey.toBase58().slice(-4)}`
+    : null;
+
+  return (
   <aside
     style={{
       position:      "fixed",
@@ -56,6 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => (
         return (
           <button
             key={label}
+            type="button"
             onClick={() => onNavChange(label)}
             style={{
               display:     "flex",
@@ -86,14 +94,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => (
       })}
     </nav>
 
-    {/* ── Bottom ── */}
+    {/* ── Bottom: wallet status + utility links ── */}
     <div style={{ marginTop: "auto", paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-      <GradientButton fullWidth>Connect Wallet</GradientButton>
+      {/* Wallet status pill — no duplicate connect button; header has WalletMultiButton */}
+      <div style={{
+        display:      "flex",
+        alignItems:   "center",
+        gap:          8,
+        padding:      "8px 12px",
+        borderRadius: 8,
+        background:   connected ? `${colors.primaryContainer}18` : "transparent",
+        border:       `1px solid ${connected ? colors.primaryContainer + "44" : "rgba(255,255,255,0.06)"}`,
+        marginBottom: 8,
+      }}>
+        <div style={{
+          width: 7, height: 7, borderRadius: "50%",
+          background: connected ? colors.tertiary : "#64748b",
+          flexShrink: 0,
+        }} />
+        <span style={{ fontSize: 11, color: connected ? colors.primary : "#64748b", fontFamily: fontFamily.body }}>
+          {connected && shortKey ? shortKey : "Not connected"}
+        </span>
+      </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {UTILITY_LINKS.map(({ icon, label }) => (
           <button
             key={label}
+            type="button"
             style={{
               display:    "flex",
               alignItems: "center",
@@ -115,4 +143,5 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => (
       </div>
     </div>
   </aside>
-);
+  );
+};
