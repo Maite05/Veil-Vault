@@ -18,6 +18,7 @@ pub struct CreateDWallet<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
 
+    // Box VaultState (1226 bytes) to keep try_accounts within the BPF 4096-byte stack limit.
     #[account(
         mut,
         seeds = [b"vault", owner.key().as_ref()],
@@ -25,7 +26,7 @@ pub struct CreateDWallet<'info> {
         has_one = owner @ VaultError::Unauthorized,
         constraint = vault.dwallet.is_none() @ VaultError::DWalletAlreadyRegistered,
     )]
-    pub vault: Account<'info, VaultState>,
+    pub vault: Box<Account<'info, VaultState>>,
 
     #[account(
         init,
@@ -34,7 +35,7 @@ pub struct CreateDWallet<'info> {
         seeds = [b"dwallet", vault.key().as_ref()],
         bump,
     )]
-    pub dwallet_record: Account<'info, DWalletRecord>,
+    pub dwallet_record: Box<Account<'info, DWalletRecord>>,
 
     pub system_program: Program<'info, System>,
 }
@@ -81,7 +82,7 @@ pub struct ApproveDWallet<'info> {
         bump = vault.bump,
         has_one = owner @ VaultError::Unauthorized,
     )]
-    pub vault: Account<'info, VaultState>,
+    pub vault: Box<Account<'info, VaultState>>,
 
     #[account(
         mut,
@@ -89,7 +90,7 @@ pub struct ApproveDWallet<'info> {
         bump = dwallet_record.bump,
         constraint = dwallet_record.vault == vault.key(),
     )]
-    pub dwallet_record: Account<'info, DWalletRecord>,
+    pub dwallet_record: Box<Account<'info, DWalletRecord>>,
 }
 
 pub fn approve_handler(ctx: Context<ApproveDWallet>) -> Result<()> {

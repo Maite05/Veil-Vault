@@ -8,7 +8,7 @@ use instructions::*;
 
 // Generated keypair stored at program-keypair.json (gitignored).
 // After `anchor deploy` this is the on-chain address.
-declare_id!("5Jn23ZQaF8LVbm5WQASc7QWcAhq9QPLJQGFxmC2gUwgB");
+declare_id!("G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS");
 
 #[program]
 pub mod veil_vault {

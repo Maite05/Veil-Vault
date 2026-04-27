@@ -7,6 +7,7 @@ interface GradientButtonProps{
     fullWidth?: boolean;
     size?: "sm" | "md" | "lg";
     style?: React.CSSProperties;
+    disabled?: boolean;
 }
 
 const SIZE_MAP = {
@@ -22,11 +23,14 @@ export const GradientButton: React.FC<GradientButtonProps> = ({
     fullWidth = false,
     size = "md",
     style,
+    disabled = false,
 }) =>{
     const { padding, fontSize } = SIZE_MAP[size];
     return (
     <button
+      type="button"
       onClick={onClick}
+      disabled={disabled}
       style={{
         width:       fullWidth ? "100%" : undefined,
         padding,
@@ -37,7 +41,8 @@ export const GradientButton: React.FC<GradientButtonProps> = ({
         color:       colors.onPrimary,
         border:      "none",
         borderRadius: 8,
-        cursor:      "pointer",
+        cursor:      disabled ? "not-allowed" : "pointer",
+        opacity:     disabled ? 0.5 : 1,
         transition:  "opacity 0.2s",
         ...style,
       }}

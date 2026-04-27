@@ -9,26 +9,25 @@ pub struct Deposit<'info> {
     #[account(mut)]
     pub depositor: Signer<'info>,
 
+    // VaultState is 1226 bytes — Box it to keep try_accounts within the
+    // 4096-byte BPF stack frame limit.
     #[account(
         mut,
         seeds = [b"vault", vault.owner.as_ref()],
         bump = vault.bump,
         constraint = !vault.is_paused @ VaultError::VaultPaused,
     )]
-    pub vault: Account<'info, VaultState>,
+    pub vault: Box<Account<'info, VaultState>>,
 
     /// For bridgeless deposits this must be the approved DWalletRecord PDA.
-    /// For regular (non-bridgeless) deposits pass the DWalletRecord address anyway
-    /// (or the vault address as a dummy); the constraint only fires when bridgeless=true.
-    ///
-    /// We use Account<DWalletRecord> so Anchor validates the discriminator when
-    /// the account actually exists; the bridgeless constraint checks approval.
+    /// For regular (non-bridgeless) deposits pass the DWalletRecord address anyway;
+    /// the approval constraint only fires when bridgeless=true.
     #[account(
         seeds = [b"dwallet", vault.key().as_ref()],
         bump = dwallet_record.bump,
         constraint = !bridgeless || dwallet_record.is_approved @ VaultError::DWalletNotApproved,
     )]
-    pub dwallet_record: Account<'info, DWalletRecord>,
+    pub dwallet_record: Box<Account<'info, DWalletRecord>>,
 
     #[account(
         init,
@@ -37,7 +36,7 @@ pub struct Deposit<'info> {
         seeds = [b"deposit", vault.key().as_ref(), &deposit_index.to_le_bytes()],
         bump,
     )]
-    pub deposit_record: Account<'info, DepositRecord>,
+    pub deposit_record: Box<Account<'info, DepositRecord>>,
 
     pub system_program: Program<'info, System>,
 }
