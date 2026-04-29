@@ -53,14 +53,24 @@ next-env.d.ts
 *.pem
 *.key
 
-# Web3 / Wallet files (important)
+# Web3 / Wallet files — NEVER commit private keys
 
 wallet.json
 keys.json
 secrets.json
+program-keypair.json
+*-keypair.json
+id.json
+deploy-keypair.json
+
+# Anchor / Solana build artifacts
+target/
+test-ledger/
+.anchor/
 
 # Logs & temp
 
 *.log
 tmp/
 temp/
+.vercel
