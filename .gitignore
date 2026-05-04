@@ -4,13 +4,9 @@
 /.pnp
 .pnp.js
 
-# Next.js
+# Production builds (Vite)
 
-/.next/
-/out/
-
-# Production builds
-
+/dist
 /build
 
 # Logs
