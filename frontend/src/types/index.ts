@@ -1,4 +1,3 @@
-// ─── Primitive Unions ────────────────────────────────────────────────────────
 
 export type RiskLevel = "HIGH" | "MEDIUM" | "LOW";
 export type NavItem = "Portfolio" | "Vaults" | "Strategy" | "Security" | "Settings";
@@ -12,7 +11,6 @@ export type DepositWithdraw = "Deposit" | "Withdraw";
 export type AccentColor = "primary" | "tertiary" | "error";
 export type BadgeType = "confidential" | "limited";
 
-// ─── Domain Models ────────────────────────────────────────────────────────────
 
 export interface Asset {
   symbol: string;
@@ -66,8 +64,6 @@ export interface SecurityItem {
   value: string;
 }
 
-// ─── Component Props ──────────────────────────────────────────────────────────
-
 export interface MaterialIconProps {
   name: string;
   className?: string;
@@ -108,9 +104,13 @@ export interface VaultCardProps {
 export interface SidebarProps {
   activeNav: NavItem;
   onNavChange: (nav: NavItem) => void;
+  onHome?: () => void;
 }
 
 export interface HeaderProps {
-  activeTab: ActiveTab;
-  onTabChange: (tab: ActiveTab) => void;
+  activeTab:      ActiveTab;
+  onTabChange:    (tab: ActiveTab) => void;
+  onHome?:        () => void;
+  searchQuery?:   string;
+  onSearchChange?:(q: string) => void;
 }

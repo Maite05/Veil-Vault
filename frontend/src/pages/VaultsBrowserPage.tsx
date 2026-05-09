@@ -4,15 +4,15 @@ import { VaultCard, VaultFilterBar } from "../components/vault";
 import { useVaultFilters } from "../hooks/useVaultFilters";
 import { useIsMobile } from "../hooks";
 
-export const VaultsBrowserPage: React.FC<{ onOpenVault?: () => void }> = ({ onOpenVault }) => {
+export const VaultsBrowserPage: React.FC<{ onOpenVault?: () => void; searchQuery?: string }> = ({ onOpenVault, searchQuery = "" }) => {
   const {
     riskFilter, assetFilter, sortBy, viewMode, filteredVaults,
     setRiskFilter, setAssetFilter, setSortBy, setViewMode,
-  } = useVaultFilters();
+  } = useVaultFilters(searchQuery);
   const isMobile = useIsMobile();
 
   return (
-    <section style={{ padding: isMobile ? "16px" : "32px", maxWidth: 1200, margin: "0 auto" }}>
+    <section className="blur-in" style={{ padding: isMobile ? "16px" : "32px", maxWidth: 1200, margin: "0 auto" }}>
       {/* Hero */}
       <div style={{ marginBottom: 40 }}>
         <h2
@@ -29,7 +29,7 @@ export const VaultsBrowserPage: React.FC<{ onOpenVault?: () => void }> = ({ onOp
         </h2>
         <p style={{ color: colors.onSurfaceVariant, fontSize: 17, lineHeight: 1.65, fontWeight: 300, maxWidth: 600 }}>
           Access institutional-grade yield strategies protected by Fully Homomorphic
-          Encryption. Secure your assets in non-custodial, high-performance vaults.
+          Encryption. Secure your assets in non-custodial, high performance vaults.
         </p>
       </div>
 
