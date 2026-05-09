@@ -24,7 +24,7 @@ export const VaultDetailPage: React.FC = () => {
     : "—";
 
   return (
-    <section style={{ padding: isMobile ? "16px" : "32px", maxWidth: 1200, margin: "0 auto" }}>
+    <section className="blur-in" style={{ padding: isMobile ? "16px" : "32px", maxWidth: 1200, margin: "0 auto" }}>
 
       <div style={{
         display:             "grid",
