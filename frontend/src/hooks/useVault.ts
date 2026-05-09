@@ -81,13 +81,14 @@ export interface UseVaultReturn {
   txSig:            string | null;
   /** During setupVault: describes the current step (e.g. "2/5 Creating dWallet…"). */
   setupStep:        string | null;
-  setupVault:       () => Promise<void>;
-  depositSol:       (sol: number) => Promise<void>;
-  withdrawSol:      (sol: number) => Promise<void>;
-  executeStrategy:  (sol: number) => Promise<void>;
-  harvestYield:     (returnedSol: number) => Promise<void>;
-  updatePerformance:() => Promise<void>;
-  refresh:          () => Promise<void>;
+  setupVault:             () => Promise<void>;
+  depositSol:             (sol: number) => Promise<void>;
+  withdrawSol:            (sol: number) => Promise<void>;
+  executeStrategy:        (sol: number) => Promise<void>;
+  harvestYield:           (returnedSol: number) => Promise<void>;
+  updatePerformance:      () => Promise<void>;
+  updateStrategyParams:   (maxDrawdownBps: number, rebalanceBps: number, stopLossBps: number) => Promise<void>;
+  refresh:                () => Promise<void>;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -334,6 +335,32 @@ export function useVault(): UseVaultReturn {
     finally { setLoading(false); }
   }, [getClient, vault, readVault]);
 
+  const updateStrategyParams = useCallback(async (
+    maxDrawdownBps: number,
+    rebalanceBps:   number,
+    stopLossBps:    number,
+  ) => {
+    setLoading(true); setError(null); setTxSig(null);
+    try {
+      const fheKeys = generateFheKeyPair();
+      const { bytes, hash } = encryptStrategyParams(
+        {
+          allocationBps:       [{ asset: "SOL", bps: 6000 }, { asset: "USDC", bps: 4000 }],
+          maxDrawdownBps,
+          rebalanceTriggerBps: rebalanceBps,
+          stopLossBps,
+        },
+        fheKeys,
+      );
+      const sig = await getClient().setStrategyParams({
+        encryptedParams: bytes.slice(0, 512),
+        paramsHash:      hash,
+      });
+      setTxSig(sig); await readVault();
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+    finally { setLoading(false); }
+  }, [getClient, readVault]);
+
   return {
     vaultExists,
     dwalletApproved,
@@ -349,6 +376,7 @@ export function useVault(): UseVaultReturn {
     executeStrategy,
     harvestYield,
     updatePerformance,
+    updateStrategyParams,
     refresh: readVault,
   };
 }
