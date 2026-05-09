@@ -14,7 +14,7 @@ declare_id!("4CwAfhsw9RwDex82Kqmz3NXGhvEM7Uj8MXKHTfy5V4MT");
 pub mod veil_vault {
     use super::*;
 
-    // ── Vault lifecycle ───────────────────────────────────────────────────────
+    // Vault lifecycle 
 
     /// Initialise a new VeilVault. Registers the owner's FHE public key and
     /// sets plaintext guardrails (drawdown cap, spending limit, time-lock).
@@ -25,7 +25,7 @@ pub mod veil_vault {
         initialize_vault::handler(ctx, params)
     }
 
-    // ── Ika dWallet (bridgeless custody) ──────────────────────────────────────
+    // Ika dWallet (bridgeless custody)
 
     /// Registers an Ika dWallet with this vault.
     ///
@@ -49,7 +49,6 @@ pub mod veil_vault {
         create_dwallet::approve_handler(ctx)
     }
 
-    // ── Deposits ──────────────────────────────────────────────────────────────
 
     /// Deposit SOL into the vault.
     ///
@@ -68,7 +67,7 @@ pub mod veil_vault {
         deposit::handler(ctx, amount_lamports, source_chain, bridgeless, dwallet_tx_id, deposit_index)
     }
 
-    // ── FHE strategy management ───────────────────────────────────────────────
+    // FHE strategy management
 
     /// Store FHE-encrypted strategy parameters on-chain.
     ///
@@ -128,7 +127,7 @@ pub mod veil_vault {
         add_protocol::handler(ctx, protocol)
     }
 
-    // ── Withdrawals ───────────────────────────────────────────────────────────
+    //Withdrawals
 
     /// Pause or unpause the vault. All deposits, executions, and withdrawals
     /// are blocked while paused. Emergency stop for the vault owner.
@@ -141,7 +140,7 @@ pub mod veil_vault {
         withdraw::handler(ctx, amount_lamports)
     }
 
-    // ── Performance reporting ─────────────────────────────────────────────────
+    // Performance reporting
 
     /// Update the encrypted performance summary.
     ///

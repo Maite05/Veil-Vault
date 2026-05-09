@@ -1,12 +1,10 @@
 use anchor_lang::prelude::*;
 
-// Chain identifiers
 pub const CHAIN_SOLANA: u8 = 0;
 pub const CHAIN_BITCOIN: u8 = 1;
 pub const CHAIN_ETHEREUM: u8 = 2;
 pub const CHAIN_RWA: u8 = 3;
 
-//  Size caps
 pub const MAX_ENCRYPTED_PARAMS: usize = 512;
 pub const MAX_ENCRYPTED_PERF: usize = 256;
 pub const MAX_APPROVED_PROTOCOLS: usize = 8;

@@ -5,11 +5,11 @@ use crate::state::vault::{DWalletRecord, VaultState};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct CreateDWalletParams {
-    /// Ika dWallet object ID on Sui (32-byte object digest).
+    
     pub dwallet_id: [u8; 32],
-    /// Aggregated 2PC-MPC public key (compressed secp256k1, 33 bytes).
+    
     pub dwallet_pubkey: [u8; 33],
-    /// Bitmask of chains this dWallet supports (bit 0=Solana, 1=Bitcoin, 2=Ethereum, 3=RWA).
+    
     pub chain_bitmap: u8,
 }
 
@@ -18,7 +18,7 @@ pub struct CreateDWallet<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
 
-    // Box VaultState (1226 bytes) to keep try_accounts within the BPF 4096-byte stack limit.
+    
     #[account(
         mut,
         seeds = [b"vault", owner.key().as_ref()],

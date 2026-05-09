@@ -9,8 +9,7 @@ pub struct Deposit<'info> {
     #[account(mut)]
     pub depositor: Signer<'info>,
 
-    // VaultState is 1226 bytes — Box it to keep try_accounts within the
-    // 4096-byte BPF stack frame limit.
+    
     #[account(
         mut,
         seeds = [b"vault", vault.owner.as_ref()],

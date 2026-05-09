@@ -52,28 +52,28 @@ pub fn handler(
     let owner_key = ctx.accounts.owner.key();
     let clock = Clock::get()?;
 
-    // ── All guardrail checks + state update (scoped mutable borrow) ──────────
+    
     {
         let vault = &mut ctx.accounts.vault;
 
-        // ── Guardrail 1: time-lock ────────────────────────────────────────────
+        // Guardrail 1: time lock
         if vault.last_executed_at > 0 {
             let elapsed = clock.unix_timestamp.saturating_sub(vault.last_executed_at);
             require!(elapsed >= vault.time_lock_secs, VaultError::TimeLockActive);
         }
 
-        // ── Guardrail 2: spending limit ───────────────────────────────────────
+        // Spending limit
         require!(
             amount_lamports <= vault.spending_limit_lamports,
             VaultError::SpendingLimitExceeded
         );
 
-        // ── Guardrail 3: protocol whitelist ───────────────────────────────────
+        // Protocol whitelist
         let approved = (0..vault.approved_protocols_count as usize)
             .any(|i| vault.approved_protocols[i] == protocol);
         require!(approved, VaultError::ProtocolNotApproved);
 
-        // ── Guardrail 4: max drawdown ─────────────────────────────────────────
+        // Max drawdown
         let total = vault.total_deposited_lamports;
         if total > 0 {
             let new_net = vault.net_value_lamports.saturating_sub(amount_lamports);
@@ -87,16 +87,16 @@ pub fn handler(
             );
         }
 
-        // ── Sufficient balance ────────────────────────────────────────────────
+        // Sufficient balanc
         require!(
             vault.net_value_lamports >= amount_lamports,
             VaultError::InsufficientBalance
         );
 
-        // ── FHE proof check (devnet simulation) ───────────────────────────────
+        //FHE proof check
         verify_op_proof_simulated(&encrypted_op, &vault.strategy_params_hash, &op_proof)?;
 
-        // ── Commit state changes ──────────────────────────────────────────────
+        // Commit state changes
         vault.net_value_lamports = vault.net_value_lamports.saturating_sub(amount_lamports);
         vault.last_executed_at = clock.unix_timestamp;
     } // ← mutable borrow of vault dropped here
@@ -116,7 +116,7 @@ pub fn handler(
         protocol
     );
 
-    // ── Transfer lamports: vault PDA → protocol account ───────────────────────
+    // Transfer lamports: vault PDA → protocol account
     // Direct lamport manipulation is valid for program-owned PDAs. The mutable
     // borrow on Account<VaultState> is already released above.
     let vault_info = ctx.accounts.vault.to_account_info();
