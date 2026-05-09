@@ -8,7 +8,7 @@ import type { HeaderProps, ActiveTab } from "../../types";
 
 const TABS: ActiveTab[] = ["Overview", "Yields", "History"];
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange, onHome, searchQuery = "", onSearchChange }) => {
   const { connected } = useWallet();
   const isMobile = useIsMobile();
 
@@ -30,9 +30,15 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
       {isMobile ? (
         /* ── Mobile: logo left, wallet right ── */
         <>
-          <GradientText style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.02em", fontFamily: fontFamily.headline }}>
-            Veil Vault
-          </GradientText>
+          <button
+            type="button"
+            onClick={onHome}
+            style={{ background: "transparent", border: "none", cursor: onHome ? "pointer" : "default", padding: 0 }}
+          >
+            <GradientText style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.02em", fontFamily: fontFamily.headline }}>
+              Veil Vault
+            </GradientText>
+          </button>
           <WalletMultiButton
             style={{
               height:       36,
@@ -62,9 +68,11 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
               <input
                 type="text"
                 placeholder="Search strategies..."
+                value={searchQuery}
+                onChange={e => onSearchChange?.(e.target.value)}
                 style={{
                   background:    colors.surfaceContainerLow,
-                  border:        "none",
+                  border:        searchQuery ? `1px solid ${colors.primary}40` : "none",
                   borderRadius:  24,
                   paddingLeft:   40,
                   paddingRight:  16,
@@ -82,6 +90,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
             <nav style={{ display: "flex", gap: 24 }}>
               {TABS.map((tab) => (
                 <button
+                  type="button"
                   key={tab}
                   onClick={() => onTabChange(tab)}
                   style={{
@@ -111,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
             >
               <MaterialIcon name="notifications" size={22} />
             </button>
-            <div style={{ width: 1, height: 32, background: "rgba(255,255,255,0.10)", margin: "0 4px" }} />
+            <div style={{ width: 4 }} />
             <WalletMultiButton
               style={{
                 height:       36,

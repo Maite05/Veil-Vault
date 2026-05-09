@@ -135,6 +135,13 @@ export const globalStyles = `
     50%       { opacity: 0.4; }
   }
 
+  @keyframes blurIn {
+    from { opacity: 0; filter: blur(6px); transform: translateY(12px); }
+    to   { opacity: 1; filter: blur(0);   transform: translateY(0);    }
+  }
+
+  .blur-in { animation: blurIn 0.55s ease both; }
+
   button:hover { opacity: 0.9; }
 
   select option {

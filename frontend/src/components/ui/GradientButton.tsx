@@ -40,7 +40,7 @@ export const GradientButton: React.FC<GradientButtonProps> = ({
         background:  `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryContainer} 100%)`,
         color:       colors.onPrimary,
         border:      "none",
-        borderRadius: 8,
+        borderRadius: 6,
         cursor:      disabled ? "not-allowed" : "pointer",
         opacity:     disabled ? 0.5 : 1,
         transition:  "opacity 0.2s",

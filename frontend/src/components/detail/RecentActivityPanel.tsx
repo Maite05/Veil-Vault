@@ -20,10 +20,9 @@ export const RecentActivityPanel: React.FC = () => (
           gridTemplateColumns: "1fr 1fr auto",
           gap:                 8,
           alignItems:          "center",
-          padding:             "10px 0",
-          borderBottom: i < RECENT_ACTIVITY.length - 1
-            ? `1px solid ${colors.outlineVariant}20`
-            : "none",
+          padding:             "12px 0",
+          background:          i % 2 !== 0 ? `${colors.surfaceContainerHighest}18` : "transparent",
+          borderRadius:        6,
         }}
       >
         <span style={{ fontSize: 13, color: colors.onSurfaceVariant }}>{item.type}</span>

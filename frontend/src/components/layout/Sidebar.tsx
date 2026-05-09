@@ -22,7 +22,7 @@ const UTILITY_LINKS = [
   { icon: "description", label: "Documentation" },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange, onHome }) => {
   const { connected, publicKey } = useWallet();
   const shortKey = publicKey
     ? `${publicKey.toBase58().slice(0, 4)}…${publicKey.toBase58().slice(-4)}`
@@ -48,9 +48,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => {
   >
     {/* ── Logo ── */}
     <div style={{ marginBottom: 36 }}>
-      <GradientText style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.02em", display: "block", fontFamily: fontFamily.headline }}>
-        Veil Vault
-      </GradientText>
+      <button
+        type="button"
+        onClick={onHome}
+        style={{ background: "transparent", border: "none", cursor: onHome ? "pointer" : "default", padding: 0, textAlign: "left" }}
+      >
+        <GradientText style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.02em", display: "block", fontFamily: fontFamily.headline }}>
+          Veil Vault
+        </GradientText>
+      </button>
       <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: `${colors.primary}60`, marginTop: 4 }}>
         MPC Protected
       </p>
@@ -58,6 +64,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => {
 
     {/* ── Nav ── */}
     <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+      {/* Home — returns to the landing page */}
+      <button
+        type="button"
+        onClick={onHome}
+        style={{
+          display:      "flex",
+          alignItems:   "center",
+          gap:          12,
+          padding:      "10px 14px",
+          borderRadius: 8,
+          background:   "transparent",
+          border:       "none",
+          outline:      "none",
+          color:        colors.outline,
+          fontWeight:   400,
+          fontSize:     14,
+          fontFamily:   fontFamily.headline,
+          letterSpacing:"-0.01em",
+          cursor:       "pointer",
+          textAlign:    "left",
+          transition:   "all 0.2s ease",
+          marginBottom: 4,
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = `${colors.surfaceContainerHigh}`;
+          e.currentTarget.style.color = "#fff";
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = "transparent";
+          e.currentTarget.style.color = colors.outline;
+        }}
+      >
+        <MaterialIcon name="home" size={20} />
+        Home
+      </button>
+
       {NAV_LINKS.map(({ icon, label }) => {
         const isActive = activeNav === label;
         return (
@@ -95,7 +137,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => {
     </nav>
 
     {/* ── Bottom: wallet status + utility links ── */}
-    <div style={{ marginTop: "auto", paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+    <div style={{ marginTop: "auto", paddingTop: 20, background: `${colors.surfaceContainerLowest}80`, borderRadius: 10, padding: 12 }}>
       {/* Wallet status pill — no duplicate connect button; header has WalletMultiButton */}
       <div style={{
         display:      "flex",
