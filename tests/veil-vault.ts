@@ -877,7 +877,7 @@ describe("VeilVault", () => {
     });
 
     it("rejects harvest_yield when claimed amount exceeds vault balance", async () => {
-      // Attempt to claim 1000 SOL when the vault holds far less.
+      
       await expectErr(
         () =>
           program.methods

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { colors, fontFamily } from "../../constants/theme";
 import { MaterialIcon } from "../ui";
 
@@ -54,74 +54,89 @@ const BADGE_ITEMS: SecurityBadgeItem[] = [
   { icon: "group", title: "Ika dWallet",    subtitle: "2PC-MPC · Devnet",   badge: "MPC",   badgeColor: colors.primary  },
 ];
 
-export const SecurityBadges: React.FC = () => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-    {BADGE_ITEMS.map((item) => (
-      <div
-        key={item.title}
-        style={{
-          background:   colors.surfaceContainerLow,
-          borderRadius: 16,
-          padding:      "16px 20px",
-          display:      "flex",
-          alignItems:   "center",
-          justifyContent: "space-between",
-          flex:         1,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: `${colors.primaryContainer}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <MaterialIcon name={item.icon} size={18} style={{ color: colors.primary }} />
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "#fff", fontFamily: fontFamily.headline }}>
-              {item.title}
-            </div>
-            <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.10em" }}>
-              {item.subtitle}
-            </div>
-          </div>
-        </div>
-        <span
+const PROGRAM_ID = "G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS";
+
+export const SecurityBadges: React.FC = () => {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {BADGE_ITEMS.map((item) => (
+        <div
+          key={item.title}
           style={{
-            fontSize:      9,
-            fontWeight:    700,
-            background:    `${item.badgeColor}20`,
-            color:         item.badgeColor,
-            padding:       "4px 10px",
-            borderRadius:  4,
-            textTransform: "uppercase",
-            letterSpacing: "0.10em",
+            background:   colors.surfaceContainerLow,
+            borderRadius: 16,
+            padding:      "16px 20px",
+            display:      "flex",
+            alignItems:   "center",
+            justifyContent: "space-between",
+            flex:         1,
           }}
         >
-          {item.badge}
-        </span>
-      </div>
-    ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${colors.primaryContainer}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <MaterialIcon name={item.icon} size={18} style={{ color: colors.primary }} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: "#fff", fontFamily: fontFamily.headline }}>
+                {item.title}
+              </div>
+              <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.10em" }}>
+                {item.subtitle}
+              </div>
+            </div>
+          </div>
+          <span
+            style={{
+              fontSize:      9,
+              fontWeight:    700,
+              background:    `${item.badgeColor}20`,
+              color:         item.badgeColor,
+              padding:       "4px 10px",
+              borderRadius:  4,
+              textTransform: "uppercase",
+              letterSpacing: "0.10em",
+            }}
+          >
+            {item.badge}
+          </span>
+        </div>
+      ))}
 
-    {/* Audit reports link */}
-    <button
-      style={{
-        display:        "flex",
-        alignItems:     "center",
-        justifyContent: "center",
-        gap:            8,
-        padding:        "12px 0",
-        background:     "transparent",
-        border:         `1px solid ${colors.outlineVariant}60`,
-        borderRadius:   12,
-        color:          colors.onSurfaceVariant,
-        fontSize:       11,
-        fontWeight:     700,
-        textTransform:  "uppercase",
-        letterSpacing:  "0.12em",
-        cursor:         "pointer",
-        fontFamily:     fontFamily.headline,
-        transition:     "all 0.2s",
-      }}
-    >
-      <MaterialIcon name="security" size={14} />
-      View Audit Reports
-    </button>
-  </div>
-);
+      {/* Audit reports — opens devnet program on Solana Explorer */}
+      <button
+        onClick={() =>
+          window.open(
+            `https://explorer.solana.com/address/${PROGRAM_ID}?cluster=devnet`,
+            "_blank",
+            "noopener,noreferrer"
+          )
+        }
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          gap:            8,
+          padding:        "12px 0",
+          background:     hovered ? `${colors.primary}12` : "transparent",
+          border:         `1px solid ${hovered ? colors.primary + "60" : colors.outlineVariant + "60"}`,
+          borderRadius:   12,
+          color:          hovered ? colors.primary : colors.onSurfaceVariant,
+          fontSize:       11,
+          fontWeight:     700,
+          textTransform:  "uppercase",
+          letterSpacing:  "0.12em",
+          cursor:         "pointer",
+          fontFamily:     fontFamily.headline,
+          transition:     "all 0.2s",
+        }}
+      >
+        <MaterialIcon name="security" size={14} />
+        View Audit Reports
+      </button>
+    </div>
+  );
+};

@@ -2,21 +2,23 @@ import React from "react";
 import { colors, fontFamily } from "../constants/theme";
 import { VaultCard, VaultFilterBar } from "../components/vault";
 import { useVaultFilters } from "../hooks/useVaultFilters";
+import { useIsMobile } from "../hooks";
 
-export const VaultsBrowserPage: React.FC = () => {
+export const VaultsBrowserPage: React.FC<{ onOpenVault?: () => void }> = ({ onOpenVault }) => {
   const {
     riskFilter, assetFilter, sortBy, viewMode, filteredVaults,
     setRiskFilter, setAssetFilter, setSortBy, setViewMode,
   } = useVaultFilters();
+  const isMobile = useIsMobile();
 
   return (
-    <section style={{ padding: "32px", maxWidth: 1200, margin: "0 auto" }}>
+    <section style={{ padding: isMobile ? "16px" : "32px", maxWidth: 1200, margin: "0 auto" }}>
       {/* Hero */}
       <div style={{ marginBottom: 40 }}>
         <h2
           style={{
             fontFamily:    fontFamily.headline,
-            fontSize:      48,
+            fontSize:      isMobile ? 32 : 48,
             fontWeight:    800,
             letterSpacing: "-0.03em",
             color:         "#fff",
@@ -44,9 +46,9 @@ export const VaultsBrowserPage: React.FC = () => {
       />
 
       {/* Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 12 : 20 }}>
         {filteredVaults.map((vault) => (
-          <VaultCard key={vault.id} vault={vault} />
+          <VaultCard key={vault.id} vault={vault} onOpen={onOpenVault} />
         ))}
       </div>
     </section>

@@ -41,10 +41,14 @@ Solana becomes the fast, low-fee control and settlement layer while everything s
 ## Core Integration of Encrypt & Ika
 VeilVault is built **around** these two primitives — they are fundamental to the product:
 
-- **Ika dWallets (2PC-MPC)**: Enables programmable, decentralized multi-chain signing. The Solana program jointly controls the dWallet and enforces on-chain guardrails.
-- **Encrypt REFHE FHE**: Strategy parameters and vault state are stored and computed homomorphically. Rebalancing and risk checks happen without ever decrypting the data during execution.
+- **Ika dWallets (2PC-MPC)**: Enables programmable, decentralized multi-chain signing. The Solana program jointly controls the dWallet and enforces on-chain guardrails. → [Ika Solana Devnet Pre-Alpha Docs](https://docs.ika.xyz)
+- **Encrypt REFHE FHE**: Strategy parameters and vault state are stored and computed homomorphically. Rebalancing and risk checks happen without ever decrypting the data during execution. → [Encrypt Solana Devnet Pre-Alpha Docs](https://docs.encrypt.xyz)
 
 Removing either breaks the core experience of **bridgeless + confidential** strategy execution.
+
+> **Note on devnet simulation:** Ika's 2PC-MPC ceremony runs on Sui devnet (pre-alpha SDK). VeilVault simulates the dWallet binding deterministically on devnet while enforcing the full on-chain account structure and guardrails. Encrypt's REFHE verifier is also pre-alpha; the program stores and commits to real FHE ciphertexts with SHA-256 hash proofs — production swaps in the real REFHE verifier with no program changes required.
+
+**VeilVault also fits the AI agent guardrails use case:** spending limits, time-locks, protocol whitelists, and max drawdown are enforced at the program level — making it suitable as a decentralised guardrail layer for autonomous agents managing multi-chain capital.
 
 ```mermaid
 flowchart TD

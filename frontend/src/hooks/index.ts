@@ -1,4 +1,5 @@
 export { useNavigation   } from "./useNavigation";
+export { useIsMobile     } from "./useIsMobile";
 export { useVaultFilters } from "./useVaultFilters";
 export { useDepositForm  } from "./useDepositForm";
 export { useHover        } from "./useHover";

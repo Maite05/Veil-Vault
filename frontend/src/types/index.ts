@@ -102,6 +102,7 @@ export interface APYBadgeProps {
 
 export interface VaultCardProps {
   vault: Vault;
+  onOpen?: () => void;
 }
 
 export interface SidebarProps {

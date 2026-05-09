@@ -15,7 +15,7 @@ interface UseNavigationReturn {
  */
 export function useNavigation(): UseNavigationReturn {
   const [activeNav, setActiveNav] = useState<NavItem>("Vaults");
-  const [activeTab, setActiveTab] = useState<ActiveTab>("Yields");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("Overview");
 
   const handleNavChange = useCallback((nav: NavItem) => {
     setActiveNav(nav);

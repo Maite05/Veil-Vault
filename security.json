@@ -1,0 +1,9 @@
+{
+  "name": "VeilVault",
+  "website": "https://veil-vault-pi.vercel.app",
+  "contact": "mailto:simatusanelisiwe@gmail.com",
+  "source_code": "https://github.com/Maite05/Veil-Vault",
+  "auditors": "None",
+  "policy": "Please report security vulnerabilities to simatusanelisiwe@gmail.com. This program is deployed on Solana devnet only and is a hackathon submission. Do not exploit on mainnet.",
+  "preferred_languages": "en"
+}

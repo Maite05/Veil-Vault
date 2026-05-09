@@ -10,7 +10,7 @@
  * ──────────────────────────
  * Real FHE ciphertexts are large (4–32 KB per 64-bit value in TFHE schemes).
  * For the devnet demo we represent ciphertexts as:
- *   [4-byte magic "RFHE"] [32-byte owner pubkey] [AES-GCM encrypted plaintext]
+ *   [4-byte magic "RFHE"] [32-byte owner pubkey] [12-byte IV] [AES-GCM ciphertext+tag]
  * This preserves the on-chain interface (opaque bytes + hash) while keeping
  * the demo runnable without the full FHE runtime.
  *
@@ -18,7 +18,9 @@
  * swap the encrypt/decrypt/evaluate functions for real REFHE calls.
  */
 
-import { createHash, createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import { sha256 } from "@noble/hashes/sha2";
+import { randomBytes, concatBytes } from "@noble/hashes/utils";
+import { gcm } from "@noble/ciphers/aes";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -53,7 +55,7 @@ export interface FheOperation {
   /** Encrypted operation ciphertext */
   encryptedOp: Uint8Array;
   /**
-   * op_proof: first 32 bytes = keccak256(encrypted_op || strategy_params_hash)
+   * op_proof: first 32 bytes = sha256(encrypted_op || strategy_params_hash)
    * matches the on-chain verification in execute_strategy.rs
    */
   opProof: Uint8Array; // 64 bytes
@@ -68,9 +70,7 @@ export interface FheOperation {
 export function generateFheKeyPair(): FheKeyPair {
   const privateKey = randomBytes(32);
   // Derive the "public key" as SHA-256(privateKey) — stand-in for real FHE pk.
-  const publicKey = new Uint8Array(
-    createHash("sha256").update(privateKey).digest()
-  );
+  const publicKey = sha256(privateKey);
   return { publicKey, privateKey };
 }
 
@@ -84,7 +84,7 @@ export function encryptStrategyParams(
   params: StrategyParams,
   keyPair: FheKeyPair
 ): FheCiphertext {
-  const plaintext = Buffer.from(JSON.stringify(params), "utf8");
+  const plaintext = new TextEncoder().encode(JSON.stringify(params));
   return _encrypt(plaintext, keyPair);
 }
 
@@ -95,7 +95,7 @@ export function encryptPerformanceSummary(
   summary: Record<string, unknown>,
   keyPair: FheKeyPair
 ): FheCiphertext {
-  const plaintext = Buffer.from(JSON.stringify(summary), "utf8");
+  const plaintext = new TextEncoder().encode(JSON.stringify(summary));
   return _encrypt(plaintext, keyPair);
 }
 
@@ -108,7 +108,7 @@ export function decryptStrategyParams(
   keyPair: FheKeyPair
 ): StrategyParams {
   const plain = _decrypt(ciphertext, keyPair);
-  return JSON.parse(plain.toString("utf8")) as StrategyParams;
+  return JSON.parse(new TextDecoder().decode(plain)) as StrategyParams;
 }
 
 /**
@@ -119,7 +119,7 @@ export function decryptPerformanceSummary(
   keyPair: FheKeyPair
 ): Record<string, unknown> {
   const plain = _decrypt(ciphertext, keyPair);
-  return JSON.parse(plain.toString("utf8"));
+  return JSON.parse(new TextDecoder().decode(plain));
 }
 
 /**
@@ -140,13 +140,12 @@ export function buildStrategyOperation(
   strategyParamsHash: Uint8Array,
   keyPair: FheKeyPair
 ): FheOperation {
-  const opPlaintext = Buffer.from(JSON.stringify(operation), "utf8");
+  const opPlaintext = new TextEncoder().encode(JSON.stringify(operation));
   const { bytes: encryptedOp } = _encrypt(opPlaintext, keyPair);
 
-  // op_proof[0..32] = keccak256(encrypted_op || strategy_params_hash)
+  // op_proof[0..32] = sha256(encrypted_op || strategy_params_hash)
   // Mirrors the on-chain check in execute_strategy.rs
-  const proofPreimage = Buffer.concat([Buffer.from(encryptedOp), Buffer.from(strategyParamsHash)]);
-  const proofHash = createHash("sha256").update(proofPreimage).digest();
+  const proofHash = sha256(concatBytes(encryptedOp, strategyParamsHash));
   // Pad to 64 bytes (second half is reserved for a future ZK proof)
   const opProof = new Uint8Array(64);
   opProof.set(proofHash, 0);
@@ -154,52 +153,33 @@ export function buildStrategyOperation(
   return { encryptedOp, opProof };
 }
 
-const MAGIC = Buffer.from("RFHE");
+const MAGIC = new Uint8Array([0x52, 0x46, 0x48, 0x45]); // "RFHE"
 
-function _encrypt(plaintext: Buffer, keyPair: FheKeyPair): FheCiphertext {
-  // Derive a 32-byte AES key from the private key + a random nonce.
+function _encrypt(plaintext: Uint8Array, keyPair: FheKeyPair): FheCiphertext {
   const iv = randomBytes(12);
-  const aesKey = createHash("sha256")
-    .update(Buffer.from(keyPair.privateKey))
-    .update(iv)
-    .digest();
+  // Derive a 32-byte AES key from the private key + iv
+  const aesKey = sha256(concatBytes(keyPair.privateKey, iv));
 
-  const cipher = createCipheriv("aes-256-gcm", aesKey, iv);
-  const encrypted = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-  const tag = cipher.getAuthTag();
+  // gcm(key, nonce).encrypt(plaintext) returns ciphertext || 16-byte authTag
+  const ciphertextWithTag = gcm(aesKey, iv).encrypt(plaintext);
 
-  // Layout: [MAGIC(4)] [pubkey(32)] [iv(12)] [tag(16)] [ciphertext(n)]
-  const bytes = Buffer.concat([
-    MAGIC,
-    Buffer.from(keyPair.publicKey),
-    iv,
-    tag,
-    encrypted,
-  ]);
-
-  const hash = new Uint8Array(createHash("sha256").update(bytes).digest());
-  return { bytes: new Uint8Array(bytes), hash };
+  // Layout: [MAGIC(4)] [pubkey(32)] [iv(12)] [ciphertextWithTag(n+16)]
+  const bytes = concatBytes(MAGIC, keyPair.publicKey, iv, ciphertextWithTag);
+  const hash = sha256(bytes);
+  return { bytes, hash };
 }
 
-function _decrypt(ciphertext: Uint8Array, keyPair: FheKeyPair): Buffer {
-  const buf = Buffer.from(ciphertext);
-
-  if (!buf.slice(0, 4).equals(MAGIC)) {
+function _decrypt(ciphertext: Uint8Array, keyPair: FheKeyPair): Uint8Array {
+  if (ciphertext[0] !== 0x52 || ciphertext[1] !== 0x46 ||
+      ciphertext[2] !== 0x48 || ciphertext[3] !== 0x45) {
     throw new Error("Invalid FHE ciphertext magic");
   }
 
-  const iv = buf.slice(36, 48);   // after MAGIC(4) + pubkey(32)
-  const tag = buf.slice(48, 64);
-  const encrypted = buf.slice(64);
+  const iv = ciphertext.slice(36, 48);            // after MAGIC(4) + pubkey(32)
+  const ciphertextWithTag = ciphertext.slice(48); // rest is ciphertext + 16-byte tag
 
-  const aesKey = createHash("sha256")
-    .update(Buffer.from(keyPair.privateKey))
-    .update(iv)
-    .digest();
-
-  const decipher = createDecipheriv("aes-256-gcm", aesKey, iv);
-  decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(encrypted), decipher.final()]);
+  const aesKey = sha256(concatBytes(keyPair.privateKey, iv));
+  return gcm(aesKey, iv).decrypt(ciphertextWithTag);
 }
 
 /**
@@ -210,16 +190,19 @@ export function verifyCiphertextHash(
   ciphertext: Uint8Array,
   expectedHash: Uint8Array
 ): boolean {
-  const actual = createHash("sha256").update(Buffer.from(ciphertext)).digest();
-  return Buffer.from(actual).equals(Buffer.from(expectedHash));
+  const actual = sha256(ciphertext);
+  if (actual.length !== expectedHash.length) return false;
+  for (let i = 0; i < actual.length; i++) {
+    if (actual[i] !== expectedHash[i]) return false;
+  }
+  return true;
 }
 
 /**
- * Hash bytes exactly as Solana's `keccak::hash` does — used to pre-compute
- * op_proof client-side so it matches the on-chain verification.
+ * Hash bytes — used to pre-compute op_proof client-side so it matches
+ * the on-chain SHA-256 verification in execute_strategy.rs.
  */
 export function keccak256(data: Uint8Array): Uint8Array {
-  // Node's crypto doesn't ship keccak256; use SHA-256 as devnet stand-in.
-  // Production: replace with `@noble/hashes` keccak256.
-  return new Uint8Array(createHash("sha256").update(Buffer.from(data)).digest());
+  // Devnet: SHA-256 stand-in. Production: replace with @noble/hashes keccak256.
+  return sha256(data);
 }

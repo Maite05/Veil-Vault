@@ -8,10 +8,11 @@ import {
   RecentActivityPanel,
   PerformancePanel,
 } from "../components/detail";
-import { useVault } from "../hooks";
+import { useVault, useIsMobile } from "../hooks";
 
 export const VaultDetailPage: React.FC = () => {
   const { vault, vaultExists } = useVault();
+  const isMobile = useIsMobile();
 
   // Show real on-chain TVL when available; fall back to placeholder.
   const tvlDisplay = vaultExists && vault
@@ -23,9 +24,13 @@ export const VaultDetailPage: React.FC = () => {
     : "—";
 
   return (
-    <section style={{ padding: "32px", maxWidth: 1200, margin: "0 auto" }}>
+    <section style={{ padding: isMobile ? "16px" : "32px", maxWidth: 1200, margin: "0 auto" }}>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
+      <div style={{
+        display:             "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "1fr 320px",
+        gap:                 isMobile ? 16 : 24,
+      }}>
 
         {/* ── Left column ── */}
         <div>
@@ -39,7 +44,7 @@ export const VaultDetailPage: React.FC = () => {
 
           <VaultAPYChart />
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
             <InvestmentStrategy />
             <SecurityBadges />
           </div>

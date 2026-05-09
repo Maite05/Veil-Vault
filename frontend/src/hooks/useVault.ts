@@ -1,8 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { sha256 } from "@noble/hashes/sha256";
 import { VeilVaultClient, findVaultPda, findDWalletRecordPda } from "../../lib/solana";
+import {
+  createDWallet,
+  CHAIN_SOLANA, CHAIN_BITCOIN, CHAIN_ETHEREUM,
+} from "../../lib/ika";
+import {
+  generateFheKeyPair,
+  encryptStrategyParams,
+  encryptPerformanceSummary,
+  buildStrategyOperation,
+} from "../../lib/fhe";
 
 // ─── VaultState account byte offsets ─────────────────────────────────────────
 // Layout (Anchor Borsh):
@@ -159,24 +168,30 @@ export function useVault(): UseVaultReturn {
       const client = getClient();
       const owner  = wallet.publicKey!;
 
-      // 1. Initialise vault (FHE pubkey = random 32 bytes for devnet)
-      setSetupStep("1/5  Initialising vault…");
+      // 1. Generate FHE key pair via Encrypt REFHE simulation layer.
+      //    Production: real REFHE key generation from the Encrypt SDK.
+      setSetupStep("1/5  Generating FHE keys…");
+      const fheKeys = generateFheKeyPair();
       await client.initializeVault({
-        fhePubkey:             crypto.getRandomValues(new Uint8Array(32)),
+        fhePubkey:             fheKeys.publicKey,
         maxDrawdownBps:        2000,
         spendingLimitLamports: 2n * BigInt(LAMPORTS_PER_SOL),
         timeLockSecs:          0n,
       });
 
-      // 2. Register a simulated Ika 2PC-MPC dWallet binding (devnet stub).
-      //    Production: real dWallet ID from the Ika SDK ceremony on Sui devnet.
-      setSetupStep("2/5  Registering Ika dWallet…");
-      const dwalletPubkey = new Uint8Array(33);
-      dwalletPubkey[0]    = 0x02; // compressed secp256k1 point prefix
+      // 2. Create Ika 2PC-MPC dWallet binding via the Ika integration layer.
+      //    Production: real SDK ceremony on Sui devnet. Devnet: deterministic sim.
+      setSetupStep("2/5  Creating Ika dWallet…");
+      const [vaultPda] = findVaultPda(owner);
+      const ikaResult = await createDWallet({
+        chains:     [CHAIN_SOLANA, CHAIN_BITCOIN, CHAIN_ETHEREUM],
+        vaultPubkey: vaultPda,
+        userPubkey:  owner,
+      });
       await client.createDWallet({
-        dwalletId:   crypto.getRandomValues(new Uint8Array(32)),
-        dwalletPubkey,
-        chainBitmap: 0b0111, // Solana | Bitcoin | Ethereum
+        dwalletId:   ikaResult.dwalletId,
+        dwalletPubkey: ikaResult.dwalletPubkey,
+        chainBitmap: ikaResult.chainBitmap,
       });
 
       // 3. Approve dWallet (ratifies the 2PC-MPC ceremony on-chain)
@@ -188,21 +203,21 @@ export function useVault(): UseVaultReturn {
       setSetupStep("4/5  Adding yield protocol…");
       await client.addApprovedProtocol(owner);
 
-      // 5. Set simulated FHE-encrypted strategy params.
-      //    Production: real REFHE ciphertext from Encrypt SDK.
+      // 5. Encrypt strategy params via the Encrypt REFHE simulation layer.
+      //    Production: real REFHE ciphertext from the Encrypt SDK.
       setSetupStep("5/5  Encrypting strategy params…");
-      const encryptedParams = new TextEncoder().encode(
-        "RFHE" + JSON.stringify({
+      const { bytes: encryptedParams, hash: paramsHash } = encryptStrategyParams(
+        {
           allocationBps:       [{ asset: "SOL", bps: 6000 }, { asset: "USDC", bps: 4000 }],
           maxDrawdownBps:      1000,
           rebalanceTriggerBps: 500,
           stopLossBps:         1500,
-        })
+        },
+        fheKeys,
       );
-      const paramsHash = Array.from(sha256(encryptedParams));
       const sig = await client.setStrategyParams({
-        encryptedParams,
-        paramsHash: new Uint8Array(paramsHash),
+        encryptedParams: encryptedParams.slice(0, 512),
+        paramsHash,
       });
       setSetupStep(null);
       setTxSig(sig);
@@ -253,19 +268,18 @@ export function useVault(): UseVaultReturn {
       const client = getClient();
       const owner  = wallet.publicKey!;
 
-      // Build simulated FHE-encrypted operation descriptor.
+      // Build FHE-encrypted operation via the Encrypt REFHE simulation layer.
       //   Production: real homomorphic evaluation result from Encrypt SDK.
-      const encryptedOp = new TextEncoder().encode(
-        "RFHE" + JSON.stringify({ action: "rebalance", amountSol: sol, ts: Date.now() })
+      const fheKeys = generateFheKeyPair();
+      const { encryptedOp, opProof } = buildStrategyOperation(
+        {
+          action:         "rebalance",
+          targetProtocol: owner.toBase58(),
+          amountLamports: BigInt(Math.round(sol * LAMPORTS_PER_SOL)),
+        },
+        vault.strategyParamsHash,
+        fheKeys,
       );
-
-      // Compute devnet proof: SHA-256(encryptedOp || strategy_params_hash)[0..32] padded to 64.
-      const preimage = new Uint8Array(encryptedOp.length + 32);
-      preimage.set(encryptedOp, 0);
-      preimage.set(vault.strategyParamsHash, encryptedOp.length);
-      const digest  = sha256(preimage);
-      const opProof = new Uint8Array(64); // zeros beyond first 32
-      opProof.set(digest, 0);
 
       const sig = await client.executeStrategy({
         encryptedOp,
@@ -299,18 +313,20 @@ export function useVault(): UseVaultReturn {
     try {
       if (!vault) throw new Error("Vault not initialised.");
 
-      // Simulate FHE-encrypting the P&L summary.
-      //   Production: encrypt with the owner's REFHE public key.
-      const plaintext = JSON.stringify({
-        totalDepositedSol: vault.totalDepositedSol,
-        netValueSol:       vault.netValueSol,
-        yieldEarnedSol:    vault.yieldEarnedSol,
-        snapshotAt:        new Date().toISOString(),
-      });
-      // Prefix "RFHE" marks this as a simulated FHE ciphertext.
-      const blob = new TextEncoder().encode("RFHE" + plaintext);
-      // MAX_ENCRYPTED_PERF = 256 bytes — trim if over limit.
-      const encryptedSummary = blob.slice(0, 256);
+      // Encrypt P&L summary via the Encrypt REFHE simulation layer.
+      //   Production: encrypt with the owner's REFHE public key from the Encrypt SDK.
+      const fheKeys = generateFheKeyPair();
+      const { bytes } = encryptPerformanceSummary(
+        {
+          totalDepositedSol: vault.totalDepositedSol,
+          netValueSol:       vault.netValueSol,
+          yieldEarnedSol:    vault.yieldEarnedSol,
+          snapshotAt:        new Date().toISOString(),
+        },
+        fheKeys,
+      );
+      // MAX_ENCRYPTED_PERF = 256 bytes on-chain — trim to fit.
+      const encryptedSummary = bytes.slice(0, 256);
 
       const sig = await getClient().updatePerformance(encryptedSummary);
       setTxSig(sig); await readVault();

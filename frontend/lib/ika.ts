@@ -23,7 +23,8 @@
  * Real Ika flow reference: https://docs.ika.xyz (pre-alpha docs)
  */
 
-import { randomBytes, createHash } from "crypto";
+import { sha256 } from "@noble/hashes/sha2";
+import { randomBytes, concatBytes } from "@noble/hashes/utils";
 import { PublicKey } from "@solana/web3.js";
 
 
@@ -99,11 +100,11 @@ export async function createDWallet(
   config: DWalletConfig
 ): Promise<DWalletCreateResult> {
   // Simulated 2PC-MPC key derivation
-  const seed = createHash("sha256")
-    .update(config.vaultPubkey.toBuffer())
-    .update(config.userPubkey.toBuffer())
-    .update(randomBytes(16)) // nonce so each call produces a unique dWallet
-    .digest();
+  const seed = sha256(concatBytes(
+    config.vaultPubkey.toBytes(),
+    config.userPubkey.toBytes(),
+    randomBytes(16), // nonce so each call produces a unique dWallet
+  ));
 
   // dWallet ID: 32-byte Sui object digest (simulated)
   const dwalletId = new Uint8Array(seed);
@@ -115,23 +116,25 @@ export async function createDWallet(
 
   const bitmap = chainBitmap(...config.chains);
 
+  const toHex = (b: Uint8Array) => Array.from(b).map(x => x.toString(16).padStart(2, "0")).join("");
+
   // Derive pseudo-addresses per chain
   const chainAddresses: Record<string, string> = {};
   if (config.chains.includes(CHAIN_SOLANA)) {
     chainAddresses["solana"] = new PublicKey(seed).toBase58();
   }
   if (config.chains.includes(CHAIN_BITCOIN)) {
-    chainAddresses["bitcoin"] = `bc1q${Buffer.from(seed.slice(0, 20)).toString("hex")}`;
+    chainAddresses["bitcoin"] = `bc1q${toHex(seed.slice(0, 20))}`;
   }
   if (config.chains.includes(CHAIN_ETHEREUM)) {
-    chainAddresses["ethereum"] = `0x${Buffer.from(seed.slice(0, 20)).toString("hex")}`;
+    chainAddresses["ethereum"] = `0x${toHex(seed.slice(0, 20))}`;
   }
   if (config.chains.includes(CHAIN_RWA)) {
-    chainAddresses["rwa"] = Buffer.from(seed.slice(0, 16)).toString("hex");
+    chainAddresses["rwa"] = toHex(seed.slice(0, 16));
   }
 
   console.log("[Ika] dWallet created (devnet sim):", {
-    dwalletId: Buffer.from(dwalletId).toString("hex").slice(0, 16) + "...",
+    dwalletId: toHex(dwalletId).slice(0, 16) + "...",
     chainAddresses,
   });
 
@@ -156,12 +159,10 @@ export async function simulateBridgelessDeposit(
   /** Simple exchange rate for demo: 1 unit = N lamports */
   lamportsPerUnit = 1_000_000n
 ): Promise<BridgelessDepositIntent> {
-  const dwalletTxId = new Uint8Array(
-    createHash("sha256")
-      .update(Buffer.from(dwalletId))
-      .update(Buffer.from(BigInt(Date.now()).toString()))
-      .digest()
-  );
+  const dwalletTxId = sha256(concatBytes(
+    dwalletId,
+    new TextEncoder().encode(BigInt(Date.now()).toString()),
+  ));
 
   const equivalentLamports = nativeAmount * lamportsPerUnit;
 
@@ -170,11 +171,12 @@ export async function simulateBridgelessDeposit(
   proofBytes.set(dwalletId.slice(0, 32), 0);
   proofBytes.set(dwalletTxId, 32);
 
+  const toHex = (b: Uint8Array) => Array.from(b).map(x => x.toString(16).padStart(2, "0")).join("");
   console.log("[Ika] Bridgeless deposit intent:", {
     sourceChain,
     nativeAmount: nativeAmount.toString(),
     equivalentLamports: equivalentLamports.toString(),
-    txId: Buffer.from(dwalletTxId).toString("hex").slice(0, 16) + "...",
+    txId: toHex(dwalletTxId).slice(0, 16) + "...",
   });
 
   return { dwalletTxId, sourceChain, nativeAmount, equivalentLamports, proofBytes };
@@ -194,11 +196,8 @@ export async function simulateBridgelessDeposit(
 export async function requestDWalletSignature(
   request: DWalletSignRequest
 ): Promise<{ signature: Uint8Array; chain: number }> {
+  const hash = sha256(concatBytes(request.txBytes, request.programApprovalSignature));
   const sig = new Uint8Array(64);
-  const hash = createHash("sha256")
-    .update(request.txBytes)
-    .update(request.programApprovalSignature)
-    .digest();
   sig.set(hash, 0);
   sig.set(hash.slice(0, 32), 32);
 
@@ -217,12 +216,16 @@ export function verifyDepositProof(
 ): boolean {
   if (proof.length !== 64) return false;
   // First 32 bytes must match the dWallet ID
-  return Buffer.from(proof.slice(0, 32)).equals(Buffer.from(dwalletId));
+  for (let i = 0; i < 32; i++) {
+    if (proof[i] !== dwalletId[i]) return false;
+  }
+  return true;
 }
 
 /**
  * Format a dWallet ID for display.
  */
 export function formatDWalletId(dwalletId: Uint8Array): string {
-  return `0x${Buffer.from(dwalletId).toString("hex").slice(0, 8)}...${Buffer.from(dwalletId).toString("hex").slice(-8)}`;
+  const hex = Array.from(dwalletId).map(x => x.toString(16).padStart(2, "0")).join("");
+  return `0x${hex.slice(0, 8)}...${hex.slice(-8)}`;
 }

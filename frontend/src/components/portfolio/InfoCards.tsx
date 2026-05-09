@@ -1,6 +1,7 @@
 import React from "react";
 import { colors, fontFamily } from "../../constants/theme";
 import { MaterialIcon } from "../ui";
+import { useIsMobile } from "../../hooks";
 
 interface InfoCardData {
   icon:    string;
@@ -28,8 +29,10 @@ const INFO_CARDS: InfoCardData[] = [
   },
 ];
 
-export const InfoCards: React.FC = () => (
-  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+export const InfoCards: React.FC = () => {
+  const isMobile = useIsMobile();
+  return (
+  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 12 : 20 }}>
     {INFO_CARDS.map((card) => (
       <div key={card.title} style={{ background: colors.surfaceContainerLow, borderRadius: 16, padding: 22 }}>
         <MaterialIcon name={card.icon} size={20} style={{ color: colors.onSurfaceVariant, marginBottom: 12, display: "block" }} />
@@ -71,4 +74,5 @@ export const InfoCards: React.FC = () => (
       </div>
     ))}
   </div>
-);
+  );
+};

@@ -1,28 +1,30 @@
 import React from "react";
 import { colors, fontFamily } from "../../constants/theme";
 import { MaterialIcon, Badge, RiskDot, GradientButton } from "../ui";
-import { useHover } from "../../hooks";
+import { useHover, useIsMobile } from "../../hooks";
 import type { VaultCardProps } from "../../types";
 
 // ─── Wide Card (AI-MEV style) ─────────────────────────────────────────────────
 
-const WideVaultCard: React.FC<VaultCardProps> = ({ vault }) => {
+const WideVaultCard: React.FC<VaultCardProps> = ({ vault, onOpen }) => {
   const { hovered, onMouseEnter, onMouseLeave } = useHover();
+  const isMobile = useIsMobile();
 
   return (
     <div
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       style={{
-        gridColumn:  "span 2",
-        background:  hovered ? colors.surfaceContainer : colors.surfaceContainerLow,
-        borderRadius: 16,
-        padding:     24,
-        transition:  "all 0.5s ease",
-        overflow:    "hidden",
-        position:    "relative",
-        display:     "flex",
-        gap:         32,
+        gridColumn:    isMobile ? "span 1" : "span 2",
+        background:    hovered ? colors.surfaceContainer : colors.surfaceContainerLow,
+        borderRadius:  16,
+        padding:       isMobile ? 16 : 24,
+        transition:    "all 0.5s ease",
+        overflow:      "hidden",
+        position:      "relative",
+        display:       "flex",
+        flexDirection: isMobile ? "column" : "row",
+        gap:           isMobile ? 16 : 32,
       }}
     >
       <div style={{ position: "absolute", top: 16, right: 16 }}>
@@ -79,13 +81,13 @@ const WideVaultCard: React.FC<VaultCardProps> = ({ vault }) => {
       {/* Risk components column */}
       <div
         style={{
-          width:        220,
-          background:   "rgba(13, 14, 19, 0.50)",
-          borderRadius: 12,
-          padding:      16,
-          border:       "1px solid rgba(255,255,255,0.05)",
-          display:      "flex",
-          flexDirection:"column",
+          width:         isMobile ? "100%" : 220,
+          background:    "rgba(13, 14, 19, 0.50)",
+          borderRadius:  12,
+          padding:       16,
+          border:        "1px solid rgba(255,255,255,0.05)",
+          display:       "flex",
+          flexDirection: "column",
           justifyContent:"space-between",
         }}
       >
@@ -104,7 +106,7 @@ const WideVaultCard: React.FC<VaultCardProps> = ({ vault }) => {
             ))}
           </div>
         </div>
-        <GradientButton fullWidth style={{ marginTop: 16 }}>Join Beta</GradientButton>
+        <GradientButton fullWidth style={{ marginTop: 16 }} onClick={onOpen}>Join Beta</GradientButton>
       </div>
     </div>
   );
@@ -112,7 +114,7 @@ const WideVaultCard: React.FC<VaultCardProps> = ({ vault }) => {
 
 
 
-const StandardVaultCard: React.FC<VaultCardProps> = ({ vault }) => {
+const StandardVaultCard: React.FC<VaultCardProps> = ({ vault, onOpen }) => {
   const { hovered, onMouseEnter, onMouseLeave } = useHover();
 
   const apyAccent =
@@ -199,6 +201,7 @@ const StandardVaultCard: React.FC<VaultCardProps> = ({ vault }) => {
 
       {/* CTA */}
       <button
+        onClick={onOpen}
         style={{
           width:        "100%",
           marginTop:    24,
@@ -223,7 +226,7 @@ const StandardVaultCard: React.FC<VaultCardProps> = ({ vault }) => {
 };
 
 
-export const VaultCard: React.FC<VaultCardProps> = ({ vault }) =>
+export const VaultCard: React.FC<VaultCardProps> = ({ vault, onOpen }) =>
   vault.isWide
-    ? <WideVaultCard  vault={vault} />
-    : <StandardVaultCard vault={vault} />;
+    ? <WideVaultCard  vault={vault} onOpen={onOpen} />
+    : <StandardVaultCard vault={vault} onOpen={onOpen} />;
