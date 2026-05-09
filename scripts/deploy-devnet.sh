@@ -1,7 +1,7 @@
 
 set -euo pipefail
 
-PROGRAM_ID="5Jn23ZQaF8LVbm5WQASc7QWcAhq9QPLJQGFxmC2gUwgB"
+PROGRAM_ID="G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS"
 KEYPAIR="program-keypair.json"
 
 echo "==> Building program..."
@@ -11,7 +11,7 @@ echo "==> Syncing program ID into IDL and source..."
 anchor keys sync
 
 echo "==> Airdropping SOL to deployer wallet (devnet)..."
-solana airdrop 2 --url devnet || true   # may fail if already funded
+solana airdrop 2 --url devnet || true   \
 
 echo "==> Deploying to devnet..."
 anchor deploy \
