@@ -1,24 +1,24 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
-// Vite needs these polyfills because @solana/wallet-adapter-* uses Node.js
-// globals (Buffer, process) that browsers don't have natively.
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    nodePolyfills({
+      // Polyfill the specific Node.js built-ins that wallet-adapter deps need
+      include: ["buffer", "stream", "crypto", "events", "util", "process"],
+      globals: { Buffer: true, global: true, process: true },
+    }),
+  ],
   define: {
     "process.env": "{}",
-    global: "globalThis",
-  },
-  resolve: {
-    alias: {
-      buffer: "buffer",
-    },
   },
   optimizeDeps: {
     include: ["buffer", "@solana/web3.js", "@coral-xyz/anchor"],
   },
   build: {
-    target: "esnext",
+    target: "es2020",
     commonjsOptions: {
       transformMixedEsModules: true,
     },
