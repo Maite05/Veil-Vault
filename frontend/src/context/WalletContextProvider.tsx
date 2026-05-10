@@ -6,7 +6,6 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
-  TorusWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 
 const NETWORK = WalletAdapterNetwork.Devnet;
@@ -27,7 +26,6 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter({ network: NETWORK }),
-      new TorusWalletAdapter(),
     ],
     []
   );

@@ -5,11 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Veil Vault</title>
     <link rel="icon" href="/favicon.ico" />
-    <script type="module" crossorigin src="/assets/index-B4Ox8AuD.js"></script>
+    <style>
+      html, body { background: #121318; color: #e2e2e9; margin: 0; }
+      #root { min-height: 100vh; }
+    </style>
+    <script type="module" crossorigin src="/assets/index-DD0loxsL.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-BGquk1L2.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
+    <script>
+      function showErr(msg, src, line) {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;inset:0;background:#0d0e13;color:#f87171;padding:24px;font-family:monospace;font-size:12px;overflow:auto;z-index:9999;white-space:pre-wrap;word-break:break-all';
+        d.innerHTML = '<b style="font-size:15px">⚠️ Load Error</b>\n\n' + msg + (src ? '\n\n' + src + (line ? ':' + line : '') : '');
+        document.body.appendChild(d);
+      }
+      window.onerror = function(msg, src, line, col, err) {
+        showErr((err && err.stack) || msg, src, line);
+      };
+      window.addEventListener('unhandledrejection', function(e) {
+        var r = e.reason;
+        showErr(r ? (r.stack || r.message || String(r)) : 'Unhandled promise rejection');
+      });
+    </script>
   </body>
 </html>
 

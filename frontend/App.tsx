@@ -1,10 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, Component } from "react";
 import { colors, fontFamily, globalStyles } from "./src/constants/theme";
 import { Sidebar, Header, MobileNav } from "./src/components/layout";
 import { MaterialIcon } from "./src/components/ui";
 import { PortfolioPage, VaultsBrowserPage, VaultDetailPage, LandingPage, StrategyPage, SecurityPage, VaultHistoryPage, SettingsPage } from "./src/pages";
 import { useNavigation, useIsMobile } from "./src/hooks";
 import type { NavItem, ActiveTab } from "./src/types";
+
+// ─── Error boundary — catches render errors instead of showing blank screen ───
+
+class ErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{
+          minHeight: "100vh", background: "#0d0e13",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: 24, gap: 16, color: "#e2e2e9", fontFamily: "monospace",
+        }}>
+          <div style={{ fontSize: 32 }}>⚠️</div>
+          <p style={{ fontWeight: 700, fontSize: 16, color: "#f87171" }}>
+            Something went wrong
+          </p>
+          <pre style={{
+            fontSize: 11, color: "#94a3b8", background: "#1a1b20",
+            padding: 16, borderRadius: 8, maxWidth: "90vw",
+            overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-word",
+          }}>
+            {(this.state.error as Error).message}
+          </pre>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "10px 24px", background: "#6b5ee0", color: "#fff",
+              border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13,
+            }}
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ─── Placeholder for sections not yet built ───────────────────────────────────
 
@@ -108,6 +153,7 @@ export default function App() {
   };
 
   return (
+    <ErrorBoundary>
     <>
       <style>{globalStyles}</style>
       <div style={{ minHeight: "100vh", background: colors.surface }}>
@@ -133,5 +179,6 @@ export default function App() {
         <AmbientGlow />
       </div>
     </>
+    </ErrorBoundary>
   );
 }
