@@ -278,7 +278,8 @@ graph TD
 - **Solana Program**: Anchor 0.29 (Rust) — 10 instructions, deployed to devnet
 - **Privacy**: Encrypt REFHE FHE (devnet simulation → production REFHE verifier)
 - **Custody**: Ika dWallets 2PC-MPC (devnet stub → production Sui integration)
-- **Frontend**: React 19 + Vite 6 + Solana Wallet Adapter (Phantom / Solflare / Torus)
+- **Frontend**: React 19 + Vite 6 + Solana Wallet Adapter (Phantom / Solflare)
+- **Browser compat**: `vite-plugin-node-polyfills` — polyfills `stream`, `crypto`, `buffer` for wallet-adapter dependencies
 - **Styling**: Inline design system (Material You tokens)
 - **RPC**: Solana devnet (Helius / QuickNode recommended for production)
 
@@ -350,9 +351,10 @@ npm run build
 ```
 
 Connect **Phantom** or **Solflare** on devnet. On first visit click  
-**"Setup Vault + dWallet"** — this sends 3 transactions that initialise your  
-on-chain vault and register the simulated Ika dWallet binding. Then use the  
-deposit panel to move real devnet SOL into the vault.
+**"Setup Vault + dWallet"** — this sends 5 transactions that initialise your  
+on-chain vault, register the Ika dWallet binding, whitelist a yield protocol,  
+and encrypt + store your strategy params on-chain. Then deposit SOL and run the  
+Zerion Agent cycle from the vault detail page.
 
 ### Verify program correctness (without Solana toolchain)
 
