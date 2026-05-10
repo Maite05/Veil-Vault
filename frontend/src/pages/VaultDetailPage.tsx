@@ -8,6 +8,7 @@ import {
   RecentActivityPanel,
   PerformancePanel,
 } from "../components/detail";
+import { AgentPanel } from "../components/detail/AgentPanel";
 import { useVault, useIsMobile } from "../hooks";
 
 export const VaultDetailPage: React.FC = () => {
@@ -54,6 +55,7 @@ export const VaultDetailPage: React.FC = () => {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <DepositPanel />
           <PerformancePanel />
+          <AgentPanel />
           <RecentActivityPanel />
         </div>
       </div>

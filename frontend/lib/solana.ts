@@ -16,6 +16,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { sha256 } from "@noble/hashes/sha256";
+import { buildX402Payment, logX402Challenge } from "./x402";
 
 /** Replace after `anchor deploy --provider.cluster devnet` */
 export const PROGRAM_ID = new PublicKey(
@@ -264,6 +265,13 @@ export class VeilVaultClient {
     const owner = this.wallet.publicKey;
     const [vault] = findVaultPda(owner);
 
+    // ── x402: Payment Required ───────────────────────────────────────────────
+    // Strategy execution is a protected resource.  The 0.001 SOL micropayment
+    // is bundled atomically in the same transaction as the execute_strategy ix.
+    // Either both succeed or both fail — this is x402 on Solana.
+    const { paymentInstruction, requirement } = buildX402Payment(owner);
+    logX402Challenge(requirement);
+
     const data = Buffer.concat([
       discriminator("execute_strategy"),
       encodeBytes(args.encryptedOp),
@@ -274,14 +282,16 @@ export class VeilVaultClient {
     const ix = new TransactionInstruction({
       programId: PROGRAM_ID,
       keys: [
-        { pubkey: owner,                   isSigner: true,  isWritable: false },
+        { pubkey: owner,                   isSigner: true,  isWritable: true  },
         { pubkey: vault,                   isSigner: false, isWritable: true  },
         { pubkey: args.protocolAccount,    isSigner: false, isWritable: true  },
       ],
       data,
     });
 
-    return this._send([ix]);
+    // Prepend x402 fee transfer to the strategy instruction.
+    // The transaction signature serves as the payment proof.
+    return this._send([paymentInstruction, ix]);
   }
 
   // harvest_yield ─────────────────────────────────────────────────────────────

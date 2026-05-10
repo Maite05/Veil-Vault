@@ -140,7 +140,9 @@ export function buildStrategyOperation(
   strategyParamsHash: Uint8Array,
   keyPair: FheKeyPair
 ): FheOperation {
-  const opPlaintext = new TextEncoder().encode(JSON.stringify(operation));
+  const opPlaintext = new TextEncoder().encode(
+    JSON.stringify(operation, (_, v) => typeof v === "bigint" ? v.toString() : v)
+  );
   const { bytes: encryptedOp } = _encrypt(opPlaintext, keyPair);
 
   // op_proof[0..32] = sha256(encrypted_op || strategy_params_hash)
