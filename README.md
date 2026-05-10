@@ -5,7 +5,7 @@ A confidential yield strategy vault on Solana that lets users deposit native ass
 
 **Submitted to:** Colosseum Frontier Hackathon 2026 – Solana Track + Encrypt & Ika Track  
 **Live Demo (Devnet):** https://veil-vault-pi.vercel.app  
-**Demo Video:** _[record and paste Loom / YouTube link — required, ≤ 3 min]_  
+**Demo Video:** https://youtu.be/KXeAP_rFUbo  
 **Program ID (Devnet):** `G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS`  
 **Agent API:** `POST https://veil-vault-pi.vercel.app/api/agent/execute-strategy`
 
@@ -17,7 +17,7 @@ A confidential yield strategy vault on Solana that lets users deposit native ass
 | Unique Solana program in Rust (Anchor) | ✅ `program/` — 10 instructions, deployed to devnet |
 | Contract address in README | ✅ `G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS` |
 | Public GitHub + setup instructions | ✅ This repo — see Quick Start below |
-| Demo video (≤ 3 min) | ⏳ Record and add link before submission |
+| Demo video (≤ 3 min) | ✅ https://youtu.be/KXeAP_rFUbo |
 | Live demo link | ✅ https://veil-vault-pi.vercel.app |
 | **Bonus: x402 on Solana** | ✅ Strategy execution requires a 0.001 SOL x402 micropayment, bundled atomically with the execute_strategy instruction |
 
