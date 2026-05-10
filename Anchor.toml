@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-veil_vault = "4CwAfhsw9RwDex82Kqmz3NXGhvEM7Uj8MXKHTfy5V4MT"
+veil_vault = "G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS"
 
 [programs.localnet]
 veil_vault = "5Jn23ZQaF8LVbm5WQASc7QWcAhq9QPLJQGFxmC2gUwgB"
