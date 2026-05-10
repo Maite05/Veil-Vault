@@ -3,10 +3,154 @@
 **Veiled. Bridgeless. Autonomous.**  
 A confidential yield strategy vault on Solana that lets users deposit native assets from any chain (no bridges) and run hidden strategies using fully homomorphic encryption.
 
-**Submitted to:** Colosseum Frontier Hackathon 2026 – Encrypt & Ika Track + Main Competition  
+**Submitted to:** Colosseum Frontier Hackathon 2026 – Solana Track + Encrypt & Ika Track  
 **Live Demo (Devnet):** https://veil-vault-pi.vercel.app  
-**Demo Video:** _[add Loom / YouTube link – under 5 min]_  
-**Program ID (Devnet):** `G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS`
+**Demo Video:** _[record and paste Loom / YouTube link — required, ≤ 3 min]_  
+**Program ID (Devnet):** `G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS`  
+**Agent API:** `POST https://veil-vault-pi.vercel.app/api/agent/execute-strategy`
+
+## Solana Track — Qualification Checklist
+
+| Requirement | Status |
+|---|---|
+| Project name + description | ✅ VeilVault — encrypted bridgeless strategy vault |
+| Unique Solana program in Rust (Anchor) | ✅ `program/` — 10 instructions, deployed to devnet |
+| Contract address in README | ✅ `G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS` |
+| Public GitHub + setup instructions | ✅ This repo — see Quick Start below |
+| Demo video (≤ 3 min) | ⏳ Record and add link before submission |
+| Live demo link | ✅ https://veil-vault-pi.vercel.app |
+| **Bonus: x402 on Solana** | ✅ Strategy execution requires a 0.001 SOL x402 micropayment, bundled atomically with the execute_strategy instruction |
+
+### x402 Integration
+
+VeilVault implements the [x402 Payment Required protocol](https://x402.org) on Solana:
+
+- **Protected resource:** `execute_strategy` instruction
+- **Payment:** 0.001 SOL transfer to the VeilVault treasury PDA (`seeds: ["x402", "treasury"]`)
+- **Atomicity:** The x402 fee transfer and strategy execution are bundled in a single Solana transaction — either both succeed or both fail, making double-spend impossible
+- **On-chain enforcement:** The combined transaction is the payment proof; no off-chain oracle or server required
+- **Code:** `frontend/lib/x402.ts` — full x402 protocol implementation for Solana
+
+This demonstrates x402's natural fit with Solana's composable transaction model: what would require a round-trip HTTP 402 challenge on the web is solved in a single atomic on-chain transaction.
+
+## Zerion Agent + x402 — Autonomous Strategy Execution
+
+VeilVault exposes a machine-readable REST API that autonomous agents (such as Zerion-powered AI agents) can use to execute private vault strategies without any human intervention.
+
+### Architecture
+
+```mermaid
+flowchart TD
+    subgraph ZerionAgent ["Zerion Autonomous Agent"]
+        A1["Portfolio Analysis\n(Zerion API)"]
+        A2["Rebalancing Decision\n(AI Model)"]
+        A3["Build FHE Operation\n(Encrypt REFHE client)"]
+    end
+
+    subgraph x402Flow ["x402 Payment Flow"]
+        B1["POST /api/agent/execute-strategy\n(no payment header)"]
+        B2["← 402 Payment Required\n{recipient, amountLamports, resource}"]
+        B3["SOL Transfer → Treasury PDA\n(autonomous payment)"]
+        B4["POST /api/agent/execute-strategy\n(X-Payment-Tx: signature)"]
+    end
+
+    subgraph VeilVaultAPI ["VeilVault API (Vercel Serverless)"]
+        C1["Verify x402 payment on-chain"]
+        C2["Build unsigned execute_strategy tx\n(x402 fee + strategy ix)"]
+        C3["Return unsigned tx to agent"]
+    end
+
+    subgraph SolanaProgram ["Solana Anchor Program"]
+        D1["Verify FHE proof"]
+        D2["Enforce 4 guardrails"]
+        D3["Transfer lamports vault→protocol"]
+        D4["Collect x402 treasury fee"]
+    end
+
+    A1 --> A2 --> A3 --> B1
+    B1 --> B2 --> B3 --> B4
+    B4 --> C1 --> C2 --> C3
+    C3 -->|"Agent signs + broadcasts"| D1
+    D1 --> D2 --> D3 --> D4
+
+    style ZerionAgent fill:#1a1b20,stroke:#F7931A,stroke-width:2px
+    style x402Flow    fill:#1a1b20,stroke:#F7931A,stroke-width:2px
+    style SolanaProgram fill:#1a1b20,stroke:#00ff9d,stroke-width:2px
+```
+
+### API Reference
+
+**Health check:** `GET /api/agent/ping` → `{"ok":true,"agent":"VeilVault x402","version":"1.0.0"}`
+
+**x402 Treasury PDA:** `DqbtqKBrQrwoc7EN9aQX58B641y5KcZWD29DxxPtGz5q`
+
+**Endpoint:** `POST /api/agent/execute-strategy`
+
+**Round 1 — Discover payment requirement (no headers)**
+```
+← 402 Payment Required
+{
+  "x402Version": "v2",
+  "network": "solana-devnet",
+  "recipient": "<treasury PDA>",
+  "amountLamports": 1000000,
+  "resource": "execute_strategy — FHE-guarded capital deployment",
+  "expiresAt": "<ISO timestamp>"
+}
+```
+
+**Round 2 — Submit with payment proof**
+```
+→ POST /api/agent/execute-strategy
+   X-Payment-Tx: <payment transaction signature>
+   Content-Type: application/json
+
+   {
+     "owner": "<agent wallet pubkey>",
+     "encryptedOpB64": "<base64 FHE-encrypted operation>",
+     "opProofB64": "<base64 64-byte SHA-256 proof>",
+     "amountLamports": "50000000",
+     "protocolAccount": "<whitelisted protocol pubkey>"
+   }
+
+← 200 OK
+   {
+     "unsignedTxB64": "<base64 unsigned transaction>",
+     "description": "x402 fee + execute_strategy — atomic bundle",
+     "x402FeeLamports": 1000000,
+     "vaultPda": "<vault PDA>",
+     "hint": "Sign with owner keypair and broadcast to devnet"
+   }
+```
+
+### Running the Zerion Agent Example
+
+```bash
+# Install deps (already in project)
+npm install
+
+# Set your agent wallet private key (base58)
+export AGENT_PRIVATE_KEY="<your-devnet-keypair>"
+
+# Run the autonomous agent cycle
+npx ts-node docs/zerion-agent-example.ts
+```
+
+The agent will:
+1. Detect a rebalancing opportunity (simulated Zerion portfolio signal)
+2. Hit the API → receive 402 → pay autonomously → retry
+3. Sign the returned unsigned transaction and broadcast to devnet
+4. Print the Solana Explorer link for the confirmed execution
+
+### Why This Is Powerful
+
+| Feature | Benefit |
+|---|---|
+| **x402 + Solana atomicity** | Fee payment and strategy execution in a single tx — no double-spend risk |
+| **Non-custodial** | Agent signs locally; server never holds private keys |
+| **FHE privacy** | Strategy logic stays hidden from the API itself — only the proof is verified |
+| **Ika multi-chain** | Agent can trigger bridgeless BTC/ETH operations via dWallet |
+| **Guardrails** | On-chain limits (max drawdown, spending limit, whitelist) can't be bypassed |
 
 ## Target Users & Use Cases
 
