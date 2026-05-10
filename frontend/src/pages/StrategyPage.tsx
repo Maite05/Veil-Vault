@@ -3,6 +3,7 @@ import { colors, fontFamily } from "../constants/theme";
 import { MaterialIcon, GradientButton } from "../components/ui";
 import { useVault } from "../hooks";
 import { useIsMobile } from "../hooks";
+import { X402_FEE_LAMPORTS, formatX402Fee } from "../../lib/x402";
 
 function shortenHash(h: Uint8Array): string {
   const hex = Array.from(h).map(x => x.toString(16).padStart(2, "0")).join("");
@@ -195,6 +196,22 @@ export const StrategyPage: React.FC = () => {
             <p style={{ fontSize: 12, color: "#475569", marginBottom: 12 }}>
               Transfers SOL from vault to protocol under FHE guardrails. Proof is built from the on-chain strategy hash.
             </p>
+
+            {/* x402 fee banner */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: "#F7931A18", borderRadius: 8, padding: "8px 12px", marginBottom: 12,
+            }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: "#F7931A", letterSpacing: "0.05em" }}>402</span>
+              <span style={{ fontSize: 11, color: "#94a3b8", flex: 1 }}>
+                Payment required · {formatX402Fee(X402_FEE_LAMPORTS)} micropayment bundled atomically with execution
+              </span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: "#F7931A", background: "#F7931A18",
+                padding: "2px 7px", borderRadius: 4, textTransform: "uppercase" as const, letterSpacing: "0.1em" }}>
+                x402
+              </span>
+            </div>
+
             <input
               type="number" min="0.001" step="0.01" value={execAmt}
               onChange={e => setExecAmt(e.target.value)}
