@@ -95,20 +95,19 @@ flowchart TD
 
     subgraph VeilVault ["VeilVault Core"]
         C1[Verify x402 Payment on-chain]
-        C2[Run FHE Strategy Computation\n(Encrypt REFHE)]
-        C3[Enforce Guardrails]
+        C2[FHE Strategy Computation via Encrypt REFHE]
+        C3[Enforce On-chain Guardrails]
         C4[Execute Strategy]
         C1 --> C2 --> C3 --> C4
     end
 
     subgraph Ika ["Ika + Execution"]
-        D1[dWallet Signing\n(Bridgeless)]
-        D2[Interact with DeFi Protocols\n(Kamino, Jupiter etc.)]
+        D1[dWallet Bridgeless Signing]
+        D2[Interact with DeFi Protocols]
     end
 
-    Agent --> Payment --> VeilVault --> Ika  
-
-
+    Agent --> Payment --> VeilVault --> Ika
+```
 
 Full technical details, API specs, setup instructions, and agent example code are available below.
 
