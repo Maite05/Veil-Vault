@@ -28,7 +28,7 @@ export const PerformancePanel: React.FC = () => {
 
   const ready = vaultExists && dwalletApproved && vault?.strategyParamsSet;
 
-  if (!ready) return null; // hidden until vault is fully set up
+  if (!ready) return null;
 
   const inputStyle: React.CSSProperties = {
     background:   colors.surfaceContainerHighest,
