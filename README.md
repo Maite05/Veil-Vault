@@ -121,4 +121,4 @@ Full technical details, API specs, setup instructions, and agent example code ar
 
 ### **VeilVault** — Privacy that doesn’t sacrifice power.
 
-Built during Colosseum Frontier Hackathon 2026 with strong ambition to become core infrastructure for the next era of onchain capital.
+Built during **Colosseum Frontier Hackathon 2026** with strong ambition to become core infrastructure for the next era of **onchain capital**.
