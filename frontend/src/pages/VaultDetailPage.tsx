@@ -27,14 +27,9 @@ export const VaultDetailPage: React.FC = () => {
   return (
     <section className="blur-in" style={{ padding: isMobile ? "16px" : "32px", maxWidth: 1200, margin: "0 auto" }}>
 
-      <div style={{
-        display:             "grid",
-        gridTemplateColumns: isMobile ? "1fr" : "1fr 320px",
-        gap:                 isMobile ? 16 : 24,
-      }}>
-
-        {/* ── Left column ── */}
-        <div>
+      {/* ── Mobile: action panels first, then chart/info ── */}
+      {isMobile ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <VaultDetailHeader
             breadcrumb="VeilVault — Encrypted Yield"
             title="Encrypted Yield Vault"
@@ -42,23 +37,43 @@ export const VaultDetailPage: React.FC = () => {
             netApy={yieldDisplay}
             tvl={tvlDisplay}
           />
-
-          <VaultAPYChart />
-
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
-            <InvestmentStrategy />
-            <SecurityBadges />
-          </div>
-        </div>
-
-        {/* ── Right column ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <DepositPanel />
           <PerformancePanel />
           <AgentPanel />
+          <VaultAPYChart />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+            <InvestmentStrategy />
+            <SecurityBadges />
+          </div>
           <RecentActivityPanel />
         </div>
-      </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
+          {/* ── Left column ── */}
+          <div>
+            <VaultDetailHeader
+              breadcrumb="VeilVault — Encrypted Yield"
+              title="Encrypted Yield Vault"
+              description="Deposit native SOL (or bridgeless BTC/ETH via Ika dWallet). Strategy params are FHE-encrypted; guardrails enforced on-chain."
+              netApy={yieldDisplay}
+              tvl={tvlDisplay}
+            />
+            <VaultAPYChart />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+              <InvestmentStrategy />
+              <SecurityBadges />
+            </div>
+          </div>
+
+          {/* ── Right column ── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <DepositPanel />
+            <PerformancePanel />
+            <AgentPanel />
+            <RecentActivityPanel />
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div
