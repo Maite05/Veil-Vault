@@ -51,15 +51,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange, onHome
       <button
         type="button"
         onClick={onHome}
-        style={{ background: "transparent", border: "none", cursor: onHome ? "pointer" : "default", padding: 0, textAlign: "left" }}
+        style={{ background: "transparent", border: "none", cursor: onHome ? "pointer" : "default", padding: 0, textAlign: "left", display: "flex", alignItems: "center", gap: 10 }}
       >
-        <GradientText style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.02em", display: "block", fontFamily: fontFamily.headline }}>
-          Veil Vault
-        </GradientText>
+        <img src="/logo.jpg" alt="Veil Vault" style={{ height: 40, width: 40, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
+        <div>
+          <GradientText style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em", display: "block", fontFamily: fontFamily.headline }}>
+            Veil Vault
+          </GradientText>
+          <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.18em", color: `${colors.primary}60`, margin: 0 }}>
+            MPC Protected
+          </p>
+        </div>
       </button>
-      <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: `${colors.primary}60`, marginTop: 4 }}>
-        MPC Protected
-      </p>
     </div>
 
     {/* ── Nav ── */}

@@ -231,9 +231,12 @@ const Navbar: React.FC<{ onLaunch: () => void }> = ({ onLaunch }) => {
       backdropFilter: scrolled ? "blur(20px)" : "none",
       transition:     "background 0.3s",
     }}>
-      <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.02em", fontFamily: fontFamily.headline, color: colors.primary }}>
-        Veil Vaults
-      </span>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <img src="/logo.jpg" alt="Veil Vault" style={{ height: 32, width: 32, borderRadius: 8, objectFit: "cover" }} />
+        <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.02em", fontFamily: fontFamily.headline, color: colors.primary }}>
+          Veil Vault
+        </span>
+      </div>
 
       {!isMobile && (
         <div style={{ display: "flex", gap: 36 }}>

@@ -33,8 +33,9 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange, onHome, 
           <button
             type="button"
             onClick={onHome}
-            style={{ background: "transparent", border: "none", cursor: onHome ? "pointer" : "default", padding: 0 }}
+            style={{ background: "transparent", border: "none", cursor: onHome ? "pointer" : "default", padding: 0, display: "flex", alignItems: "center", gap: 8 }}
           >
+            <img src="/logo.jpg" alt="Veil Vault" style={{ height: 32, width: 32, borderRadius: 8, objectFit: "cover" }} />
             <GradientText style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.02em", fontFamily: fontFamily.headline }}>
               Veil Vault
             </GradientText>
