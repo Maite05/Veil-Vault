@@ -7,7 +7,7 @@ Private yield infrastructure for the multi-chain agent economy on Solana.
 **Tracks:** Main Competition + Encrypt & Ika + Zerion Autonomous Agents  
 
 **Live Demo:** [https://veil-vault-pi.vercel.app](https://veil-vault-pi.vercel.app)  
-**Demo Video:** [https://youtu.be/KXeAP_rFUbo](https://youtu.be/KXeAP_rFUbo)  
+**Demo Video:**  https://youtu.be/l1KIZcg2Zes
 **Program ID (Devnet):** `G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS`
 
 ## Vision
