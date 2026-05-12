@@ -4,8 +4,9 @@
 Private yield infrastructure for the multi-chain agent economy on Solana.
 
 **Submitted to:** Colosseum Frontier Hackathon 2026  
-**Tracks:** Main Competition + Encrypt & Ika + Zerion Autonomous Agents  
+**Tracks:** Main Competition + Encrypt & Ika + Zerion Autonomous Agents
 
+**Repo:** [https://github.com/Maite05/Veil-Vault](https://github.com/Maite05/Veil-Vault)
 **Live Demo:** [https://veil-vault-pi.vercel.app](https://veil-vault-pi.vercel.app)  
 **Demo Video:**  https://youtu.be/l1KIZcg2Zes
 **Program ID (Devnet):** `G8SzxHU2uHnxNSvjXhdgfHmjGjBL4hdzm1frkHyYbusS`
@@ -14,7 +15,7 @@ Private yield infrastructure for the multi-chain agent economy on Solana.
 
 VeilVault is building the **private & programmable yield layer** for Solana’s emerging agent economy.
 
-We enable users and autonomous agents to deploy capital across chains **without bridges**, run **fully confidential strategies**, and enforce strong on-chain guardrails — all while paying natively via x402.
+We enable users and autonomous agents to deploy capital across chains **without bridges**, run **fully confidential strategies**, and enforce strong onchain guardrails — all while paying natively via x402.
 
 By combining Ika’s dWallets, Encrypt’s FHE, and atomic x402 payments, we’re creating infrastructure that institutions, DAOs, and AI agents can actually trust with serious capital.
 
